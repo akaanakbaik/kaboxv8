@@ -2,6 +2,14 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+const expiryOptions = [
+  { label: "10 Menit", value: "10m" },
+  { label: "1 Jam", value: "1h" },
+  { label: "1 Hari", value: "1d" },
+  { label: "1 Minggu", value: "1w" },
+  { label: "Selamanya", value: "never" }
+];
+
 export default function UploadBox() {
   const [files, setFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -108,6 +116,8 @@ export default function UploadBox() {
     showToast("Tautan disalin ke papan klip!");
   };
 
+  const currentExpiryLabel = expiryOptions.find((o) => o.value === expiry)?.label || "1 Hari";
+
   return (
     <div className="w-full max-w-2xl mx-auto flex flex-col gap-6 px-2 relative">
       <AnimatePresence>
@@ -173,7 +183,7 @@ export default function UploadBox() {
             className="w-full bg-[#161616] border border-white/20 rounded-2xl p-4 text-sm font-medium flex justify-between items-center hover:bg-white/5 transition-colors"
             disabled={isUploading}
           >
-            {expiryOptions.find((o) => o.value === expiry)?.label}
+            {currentExpiryLabel}
             <svg className={`w-5 h-5 transition-transform duration-300 ${isSelectOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
           </button>
           <AnimatePresence>
