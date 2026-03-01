@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="w-full py-6 mt-16 border-t border-white/5 flex flex-col items-center justify-center gap-3 text-xs md:text-sm text-white/50">
+    <footer className="w-full relative z-10 py-6 mt-16 border-t border-white/5 flex flex-col items-center justify-center gap-3 text-xs md:text-sm text-white/50 bg-[#0a0a0a]">
       <div className="flex items-center gap-1.5">
         <span>created by</span>
         <Link 
