@@ -66,7 +66,7 @@ export default function UploadBox() {
 
       try {
         const xhr = new XMLHttpRequest();
-        xhr.open("POST", "https://kabox.my.id/api/upload", true);
+        xhr.open("POST", "https://api.kabox.my.id/api/upload", true);
         xhr.setRequestHeader("x-expire", expiry);
 
         const uploadPromise = new Promise((resolve, reject) => {
