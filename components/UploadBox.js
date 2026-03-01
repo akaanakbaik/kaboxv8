@@ -43,11 +43,21 @@ export default function UploadBox() {
     setFiles(prev => [...prev, ...dropped].slice(0, 5));
   };
 
+  const handleFileSelect = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    if (files.length + selectedFiles.length > 5) return addNotif("Maksimal 5 media saja", "error");
+    setFiles(prev => [...prev, ...selectedFiles].slice(0, 5));
+  };
+
+  const removeFile = (index) => setFiles(files.filter((_, i) => i !== index));
+
   const startUpload = async () => {
     if (files.length === 0) return;
     setIsUploading(true);
     setTargetProgress(0);
     setDisplayProgress(0);
+    setResults([]);
+
     const newResults = [];
 
     for (let i = 0; i < files.length; i++) {
@@ -71,17 +81,17 @@ export default function UploadBox() {
             if (xhr.status === 200) {
               resolve(JSON.parse(xhr.responseText).url);
             } else {
-              reject("Gagal");
+              reject("Gagal terhubung");
             }
           };
-          xhr.onerror = () => reject("CORS/Network Error");
+          xhr.onerror = () => reject("Koneksi terputus (CORS/Jaringan)");
           xhr.send(formData);
         });
 
         const url = await uploadPromise;
         newResults.push({ name: file.name, url });
       } catch (err) {
-        addNotif(`Gagal: ${file.name}`, "error");
+        addNotif(`Gagal: ${file.name} - ${err}`, "error");
       }
     }
 
@@ -124,8 +134,8 @@ export default function UploadBox() {
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
-        className={`relative group overflow-hidden border-2 border-dashed rounded-[2.5rem] p-12 flex flex-col items-center transition-all duration-500 ${
-          isDragging ? "border-white bg-white/5 scale-[1.01]" : "border-white/10 bg-soft/50"
+        className={`relative group overflow-hidden border-2 border-dashed rounded-[2.5rem] p-10 md:p-14 flex flex-col items-center transition-all duration-500 ${
+          isDragging ? "border-white bg-white/5 scale-[1.01]" : "border-white/10 bg-[#121212]/50"
         }`}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
@@ -138,14 +148,30 @@ export default function UploadBox() {
           Pilih Media
         </motion.button>
         <p className="mt-6 text-[10px] font-bold text-white/30 uppercase tracking-[0.3em]">Maksimal 5 Berkas • NAT Storage</p>
-        <input type="file" multiple ref={fileInputRef} onChange={(e) => setFiles(Array.from(e.target.files).slice(0, 5))} className="hidden" />
+        <input type="file" multiple ref={fileInputRef} onChange={handleFileSelect} className="hidden" disabled={isUploading} />
       </motion.div>
+
+      <AnimatePresence>
+        {files.length > 0 && !isUploading && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex flex-col gap-3 mt-6">
+            {files.map((f, i) => (
+              <div key={i} className="flex items-center justify-between bg-[#161616] p-4 rounded-2xl border border-white/10 shadow-sm">
+                <span className="text-xs md:text-sm truncate w-3/4 font-medium text-white/80">{f.name}</span>
+                <button onClick={() => removeFile(i)} className="text-red-400 p-2 hover:bg-white/10 rounded-xl transition-colors">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="mt-8 flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
           <button
             onClick={() => !isUploading && setIsSelectOpen(!isSelectOpen)}
-            className="w-full bg-soft border border-white/5 rounded-2xl p-4 text-xs font-bold uppercase tracking-widest flex justify-between items-center hover:bg-white/5 transition-all"
+            className="w-full bg-[#161616] border border-white/10 rounded-2xl p-4 text-xs font-bold uppercase tracking-widest flex justify-between items-center hover:bg-white/5 transition-all"
+            disabled={isUploading}
           >
             <span>Exp: {expiryOptions.find(o => o.value === expiry).label}</span>
             <svg className={`w-4 h-4 transition-transform ${isSelectOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
@@ -182,7 +208,7 @@ export default function UploadBox() {
 
       <div className="mt-10 space-y-4">
         {results.map((res, i) => (
-          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} key={i} className="bg-soft border border-white/5 p-5 rounded-[1.5rem] flex flex-col md:flex-row items-center gap-4 group">
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} key={i} className="bg-[#121212] border border-white/10 p-5 rounded-[1.5rem] flex flex-col md:flex-row items-center gap-4 group">
             <span className="text-[10px] font-bold text-white/40 truncate flex-1 uppercase tracking-wider">{res.name}</span>
             <div className="flex items-center gap-2 w-full md:w-auto">
               <div className="flex-1 md:w-48 bg-black/40 border border-white/5 rounded-xl px-4 py-2 text-[10px] font-mono text-white/60 overflow-x-auto no-scrollbar whitespace-nowrap leading-relaxed">{res.url}</div>
