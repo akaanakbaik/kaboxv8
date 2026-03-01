@@ -21,23 +21,23 @@ export default function ApiDocs() {
       method: "POST",
       path: "/api/upload",
       desc: "Mengunggah berkas fisik dari perangkat Anda ke sistem Kabox.",
-      curl: 'curl -X POST https://kabox.my.id/api/upload \\\n  -H "x-expire: 1d" \\\n  -F "file=@gambar.jpg"',
-      output: '{\n  "author": "aka",\n  "email": "akaanakbaik17@proton.me",\n  "success": true,\n  "message": "Media successfully processed and secured",\n  "metadata": {\n    "id": "abc123xyz",\n    "original_name": "gambar.jpg",\n    "mime_type": "image/jpeg",\n    "size_bytes": 102400,\n    "size_formatted": "0.10 MB",\n    "uploaded_at": "...",\n    "expires_at": "..."\n  },\n  "url": "https://kabox.my.id/file/abc123xyz.jpg"\n}'
+      curl: 'curl -X POST https://api.kabox.my.id/api/upload \\\n  -H "x-expire: 1d" \\\n  -F "file=@gambar.jpg"',
+      output: '{\n  "author": "aka",\n  "email": "akaanakbaik17@proton.me",\n  "success": true,\n  "message": "Media successfully processed and secured",\n  "metadata": {\n    "id": "abc123xyz",\n    "original_name": "gambar.jpg",\n    "mime_type": "image/jpeg",\n    "size_bytes": 102400,\n    "size_formatted": "0.10 MB",\n    "uploaded_at": "...",\n    "expires_at": "..."\n  },\n  "url": "https://api.kabox.my.id/file/abc123xyz.jpg"\n}'
     },
     {
       title: "Unggah via Tautan",
       method: "POST",
       path: "/api/upload/url",
       desc: "Menyalin media dari peladen eksternal langsung ke penyimpanan Kabox.",
-      curl: 'curl -X POST https://kabox.my.id/api/upload/url \\\n  -H "Content-Type: application/json" \\\n  -d \'{"url": "https://contoh.com/video.mp4", "expire": "1h"}\'',
-      output: '{\n  "author": "aka",\n  "email": "akaanakbaik17@proton.me",\n  "success": true,\n  "message": "Remote media successfully fetched and secured",\n  "metadata": {\n    "id": "def456uvw",\n    "source_url": "https://contoh.com/video.mp4",\n    "mime_type": "video/mp4",\n    "size_bytes": 5242880,\n    "size_formatted": "5.00 MB",\n    "uploaded_at": "...",\n    "expires_at": "..."\n  },\n  "url": "https://kabox.my.id/file/def456uvw.mp4"\n}'
+      curl: 'curl -X POST https://api.kabox.my.id/api/upload/url \\\n  -H "Content-Type: application/json" \\\n  -d \'{"url": "https://contoh.com/video.mp4", "expire": "1h"}\'',
+      output: '{\n  "author": "aka",\n  "email": "akaanakbaik17@proton.me",\n  "success": true,\n  "message": "Remote media successfully fetched and secured",\n  "metadata": {\n    "id": "def456uvw",\n    "source_url": "https://contoh.com/video.mp4",\n    "mime_type": "video/mp4",\n    "size_bytes": 5242880,\n    "size_formatted": "5.00 MB",\n    "uploaded_at": "...",\n    "expires_at": "..."\n  },\n  "url": "https://api.kabox.my.id/file/def456uvw.mp4"\n}'
     },
     {
       title: "Telemetri Sistem",
       method: "GET",
       path: "/api/health",
       desc: "Memeriksa status kesehatan peladen, penggunaan memori, dan log keamanan.",
-      curl: 'curl -s https://kabox.my.id/api/health',
+      curl: 'curl -s https://api.kabox.my.id/api/health',
       output: '{\n  "author": "aka",\n  "email": "akaanakbaik17@proton.me",\n  "status": "operational",\n  "timestamp": "...",\n  "response_time_ms": "12.34",\n  "infrastructure": { ... },\n  "storage": { ... },\n  "memory_diagnostics": { ... },\n  "security_firewall": { ... }\n}'
     }
   ];
