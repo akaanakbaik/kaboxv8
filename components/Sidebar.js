@@ -1,8 +1,20 @@
 "use client";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useEffect } from "react";
 
 export default function Sidebar({ isOpen, onClose }) {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
+
   const menu = [
     { name: "Beranda", path: "/" },
     { name: "API Docs", path: "/docs" },
@@ -19,25 +31,33 @@ export default function Sidebar({ isOpen, onClose }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99]"
+            className="fixed inset-0 bg-black/60 backdrop-blur-md z-[99] cursor-pointer touch-none"
           />
           <motion.div
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed right-0 top-0 h-full w-[70%] md:w-[300px] bg-soft border-l border-white/10 z-[100] p-8 shadow-2xl"
+            className="fixed right-0 top-0 h-full w-[75%] md:w-[350px] bg-[#161616] border-l border-white/10 z-[100] p-8 shadow-2xl overflow-hidden flex flex-col touch-none"
           >
             <div className="flex justify-end mb-10">
-              <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-colors">
+              <button 
+                onClick={onClose} 
+                className="p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors border border-white/5"
+              >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 6L6 18M6 6l12 12" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M18 6L6 18M6 6l12 12" />
                 </svg>
               </button>
             </div>
             <nav className="flex flex-col gap-6">
               {menu.map((item, i) => (
-                <Link key={i} href={item.path} onClick={onClose} className="text-xl font-medium hover:text-white/60 transition-colors">
+                <Link 
+                  key={i} 
+                  href={item.path} 
+                  onClick={onClose} 
+                  className="text-lg md:text-xl font-medium text-white/70 hover:text-white transition-colors"
+                >
                   {item.name}
                 </Link>
               ))}
