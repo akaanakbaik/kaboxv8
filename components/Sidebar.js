@@ -6,6 +6,7 @@ export default function Sidebar({ isOpen, onClose }) {
   const menu = [
     { name: "Beranda", path: "/" },
     { name: "API Docs", path: "/docs" },
+    { name: "Kebijakan Privasi", path: "/privacy" },
     { name: "Syarat & Ketentuan", path: "/terms" }
   ];
 
