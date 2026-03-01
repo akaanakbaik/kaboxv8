@@ -4,13 +4,17 @@
 
 @layer base {
   body {
-    @apply bg-[#0a0a0a] text-white m-0 p-0 box-border antialiased;
+    @apply bg-[#070707] text-white m-0 p-0 antialiased overflow-x-hidden;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv11";
   }
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -18,10 +22,15 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2a2a2a;
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3a3a3a;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+::selection {
+  background: white;
+  color: black;
 }
