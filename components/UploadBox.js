@@ -67,6 +67,7 @@ export default function UploadBox() {
 
       try {
         const xhr = new XMLHttpRequest();
+        xhr.withCredentials = false;
         xhr.open("POST", "https://api.kabox.my.id/api/upload", true);
         xhr.setRequestHeader("x-expire", expiry);
         
@@ -81,10 +82,10 @@ export default function UploadBox() {
             if (xhr.status === 200) {
               resolve(JSON.parse(xhr.responseText).url);
             } else {
-              reject("Gagal terhubung");
+              reject(`Peladen menolak (Status: ${xhr.status})`);
             }
           };
-          xhr.onerror = () => reject("Koneksi terputus (CORS/Jaringan)");
+          xhr.onerror = () => reject("Koneksi terputus. Pastikan berkas tidak terlalu besar.");
           xhr.send(formData);
         });
 
