@@ -301,3 +301,141 @@
     background: rgba(76, 76, 76, 0.96);
   }
 }
+
+.kabox-mode-switch {
+  --switch-fluid-duration: 520ms;
+  --switch-glow-duration: 280ms;
+  contain: layout paint;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  will-change: box-shadow;
+}
+
+.kabox-mode-switch:has(.kabox-mode-switch-option:hover:not(:disabled)) {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), inset 0 -1px 0 rgba(0, 0, 0, 0.38), 0 18px 38px rgba(0, 0, 0, 0.26), 0 4px 10px rgba(0, 0, 0, 0.32);
+}
+
+.kabox-mode-switch-thumb {
+  will-change: transform, border-radius, filter;
+  backface-visibility: hidden;
+  transform-origin: 50% 50%;
+  transform-style: preserve-3d;
+  transition: transform var(--switch-fluid-duration) var(--switch-spring), border-radius var(--switch-fluid-duration) var(--switch-spring), box-shadow var(--switch-glow-duration) var(--switch-ease), filter var(--switch-glow-duration) var(--switch-ease), background var(--switch-glow-duration) var(--switch-ease);
+  animation: kabox-thumb-breathe 4.8s var(--switch-ease) infinite;
+}
+
+.kabox-mode-switch-thumb-url {
+  border-radius: calc(var(--switch-radius) - 2px) calc(var(--switch-radius) - 6px) calc(var(--switch-radius) - 2px) calc(var(--switch-radius) - 6px);
+  filter: saturate(1.08) brightness(1.02);
+}
+
+.kabox-mode-switch[data-mode="local"] .kabox-mode-switch-thumb {
+  border-radius: calc(var(--switch-radius) - 6px) calc(var(--switch-radius) - 2px) calc(var(--switch-radius) - 6px) calc(var(--switch-radius) - 2px);
+}
+
+.kabox-mode-switch[data-mode="url"] .kabox-mode-switch-thumb {
+  border-radius: calc(var(--switch-radius) - 2px) calc(var(--switch-radius) - 6px) calc(var(--switch-radius) - 2px) calc(var(--switch-radius) - 6px);
+}
+
+.kabox-mode-switch-thumb::before {
+  will-change: transform, opacity;
+  animation: kabox-thumb-fluid 5.6s var(--switch-ease) infinite alternate;
+}
+
+.kabox-mode-switch[data-mode="url"] .kabox-mode-switch-thumb::before {
+  animation-name: kabox-thumb-fluid-url;
+}
+
+.kabox-mode-switch-thumb::after {
+  transition: opacity var(--switch-glow-duration) var(--switch-ease), transform var(--switch-fluid-duration) var(--switch-spring);
+}
+
+.kabox-mode-switch[data-mode="url"] .kabox-mode-switch-thumb::after {
+  transform: translateX(3%) scaleX(0.92);
+}
+
+.kabox-mode-switch-option {
+  min-height: 40px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kabox-mode-switch-option[data-active="true"] .kabox-mode-switch-label {
+  transform: translateY(-0.5px);
+}
+
+.kabox-mode-switch-label {
+  transition: color var(--switch-glow-duration) var(--switch-ease), transform var(--switch-fluid-duration) var(--switch-spring), letter-spacing var(--switch-glow-duration) var(--switch-ease), text-shadow var(--switch-glow-duration) var(--switch-ease);
+}
+
+.kabox-mode-switch-option[data-active="true"] .kabox-mode-switch-dot {
+  animation: kabox-dot-pulse 2.8s var(--switch-ease) infinite;
+}
+
+@keyframes kabox-thumb-breathe {
+  0%, 100% {
+    filter: saturate(1) brightness(1);
+  }
+  50% {
+    filter: saturate(1.08) brightness(1.025);
+  }
+}
+
+@keyframes kabox-thumb-fluid {
+  0% {
+    opacity: 0.46;
+    transform: translate3d(-16%, -8%, 0) rotate(-22deg) scale(0.86, 1.12);
+  }
+  42% {
+    opacity: 0.78;
+    transform: translate3d(20%, 5%, 0) rotate(-8deg) scale(1.16, 0.86);
+  }
+  100% {
+    opacity: 0.58;
+    transform: translate3d(82%, 1%, 0) rotate(12deg) scale(0.95, 1.08);
+  }
+}
+
+@keyframes kabox-thumb-fluid-url {
+  0% {
+    opacity: 0.5;
+    transform: translate3d(74%, 2%, 0) rotate(14deg) scale(0.94, 1.08);
+  }
+  48% {
+    opacity: 0.8;
+    transform: translate3d(24%, -5%, 0) rotate(3deg) scale(1.13, 0.88);
+  }
+  100% {
+    opacity: 0.58;
+    transform: translate3d(-18%, 5%, 0) rotate(-17deg) scale(0.9, 1.14);
+  }
+}
+
+@keyframes kabox-dot-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08), 0 0 14px rgba(255, 255, 255, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.035), 0 0 19px rgba(255, 255, 255, 0.64);
+  }
+}
+
+@media (min-width: 768px) {
+  .kabox-mode-switch-option {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kabox-mode-switch-thumb,
+  .kabox-mode-switch-thumb::before,
+  .kabox-mode-switch-option[data-active="true"] .kabox-mode-switch-dot {
+    animation: none;
+  }
+
+  .kabox-mode-switch-thumb,
+  .kabox-mode-switch-thumb::after,
+  .kabox-mode-switch-label {
+    transition-duration: 1ms;
+  }
+}
