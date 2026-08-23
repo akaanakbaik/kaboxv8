@@ -99,6 +99,7 @@
 .kabox-mode-switch-thumb {
   position: absolute;
   z-index: 0;
+  --switch-base-x: 0px;
   top: var(--switch-padding);
   left: var(--switch-padding);
   width: calc(50% - 6px);
@@ -111,7 +112,7 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.43), inset 0 -1px 0 rgba(0, 0, 0, 0.22), 0 5px 16px rgba(0, 0, 0, 0.32), 0 1px 3px rgba(0, 0, 0, 0.38);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  transform: translate3d(0, 0, 0);
+  transform: translate3d(var(--switch-base-x), 0, 0);
   transition: transform 360ms var(--switch-spring), box-shadow 240ms var(--switch-ease), background 240ms var(--switch-ease);
 }
 
@@ -143,7 +144,7 @@
 }
 
 .kabox-mode-switch-thumb-url {
-  transform: translate3d(calc(100% + 4px), 0, 0);
+  --switch-base-x: calc(100% + 4px);
 }
 
 .kabox-mode-switch-option {
@@ -320,7 +321,7 @@
 .kabox-mode-switch[data-interacting="true"] .kabox-mode-switch-thumb {
   z-index: 2;
   border-radius: var(--switch-liquid-radius, calc(var(--switch-radius) - 4px));
-  transform: translate3d(var(--switch-drag-x, 0px), 0, 0) rotate(var(--switch-liquid-rotate, 0deg)) scale(var(--switch-liquid-scale-x, 1), var(--switch-liquid-scale-y, 1));
+  transform: translate3d(calc(var(--switch-base-x, 0px) + var(--switch-drag-x, 0px)), 0, 0) rotate(var(--switch-liquid-rotate, 0deg)) scale(var(--switch-liquid-scale-x, 1), var(--switch-liquid-scale-y, 1));
   filter: saturate(var(--switch-liquid-glow, 1)) brightness(1.04) drop-shadow(0 8px 16px rgba(255, 255, 255, 0.08));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.52), inset 0 -3px 5px rgba(0, 0, 0, 0.28), 0 8px 22px rgba(0, 0, 0, 0.4), 0 0 26px rgba(255, 255, 255, 0.13);
   animation: none;
