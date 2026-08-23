@@ -34,3 +34,408 @@
   background: white;
   color: black;
 }
+
+.kabox-mode-switch {
+  --switch-height: 48px;
+  --switch-radius: 18px;
+  --switch-padding: 4px;
+  --switch-gap: 4px;
+  --switch-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --switch-spring: cubic-bezier(0.22, 1.25, 0.36, 1);
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: var(--switch-gap);
+  width: 100%;
+  min-height: var(--switch-height);
+  padding: var(--switch-padding);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--switch-radius);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.025) 42%, rgba(0, 0, 0, 0.42));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.11), inset 0 -1px 0 rgba(0, 0, 0, 0.35), 0 12px 28px rgba(0, 0, 0, 0.2), 0 2px 5px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(26px) saturate(155%);
+  -webkit-backdrop-filter: blur(26px) saturate(155%);
+  transition: border-color 240ms var(--switch-ease), box-shadow 240ms var(--switch-ease), background 240ms var(--switch-ease);
+}
+
+.kabox-mode-switch::before {
+  position: absolute;
+  z-index: -2;
+  top: -70px;
+  left: -16%;
+  width: 58%;
+  height: 180px;
+  content: "";
+  pointer-events: none;
+  border-radius: 999px;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.19), rgba(255, 255, 255, 0.065) 38%, transparent 72%);
+  filter: blur(18px);
+  opacity: 0.78;
+  transform: translate3d(0, 0, 0) rotate(-12deg);
+  animation: kabox-liquid-light 8s var(--switch-ease) infinite alternate;
+}
+
+.kabox-mode-switch::after {
+  position: absolute;
+  z-index: -1;
+  top: 1px;
+  right: 12%;
+  left: 12%;
+  height: 1px;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.31), transparent);
+  opacity: 0.66;
+}
+
+.kabox-mode-switch:hover {
+  border-color: rgba(255, 255, 255, 0.19);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 -1px 0 rgba(0, 0, 0, 0.36), 0 16px 34px rgba(0, 0, 0, 0.24), 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+.kabox-mode-switch-thumb {
+  position: absolute;
+  z-index: 0;
+  top: var(--switch-padding);
+  left: var(--switch-padding);
+  width: calc(50% - 6px);
+  height: calc(100% - (var(--switch-padding) * 2));
+  overflow: hidden;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: calc(var(--switch-radius) - 4px);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.29), rgba(255, 255, 255, 0.12) 45%, rgba(255, 255, 255, 0.055));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.43), inset 0 -1px 0 rgba(0, 0, 0, 0.22), 0 5px 16px rgba(0, 0, 0, 0.32), 0 1px 3px rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  transform: translate3d(0, 0, 0);
+  transition: transform 360ms var(--switch-spring), box-shadow 240ms var(--switch-ease), background 240ms var(--switch-ease);
+}
+
+.kabox-mode-switch-thumb::before {
+  position: absolute;
+  top: -30%;
+  left: -12%;
+  width: 58%;
+  height: 160%;
+  content: "";
+  border-radius: 999px;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.09) 45%, transparent 73%);
+  filter: blur(9px);
+  opacity: 0.68;
+  transform: rotate(-18deg);
+}
+
+.kabox-mode-switch-thumb::after {
+  position: absolute;
+  top: 1px;
+  right: 12%;
+  left: 12%;
+  height: 1px;
+  content: "";
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
+  opacity: 0.7;
+}
+
+.kabox-mode-switch-thumb-url {
+  transform: translate3d(calc(100% + 4px), 0, 0);
+}
+
+.kabox-mode-switch-option {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: calc(var(--switch-height) - (var(--switch-padding) * 2));
+  padding: 0 12px;
+  overflow: hidden;
+  border: 0;
+  border-radius: calc(var(--switch-radius) - 5px);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.38);
+  cursor: pointer;
+  transition: color 220ms var(--switch-ease), transform 150ms var(--switch-ease), text-shadow 220ms var(--switch-ease);
+}
+
+.kabox-mode-switch-option::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 38%, rgba(255, 255, 255, 0.025));
+  opacity: 0;
+  transition: opacity 220ms var(--switch-ease);
+}
+
+.kabox-mode-switch-option:hover:not(:disabled) {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.kabox-mode-switch-option:hover:not(:disabled)::before {
+  opacity: 1;
+}
+
+.kabox-mode-switch-option:active:not(:disabled) {
+  transform: scale(0.965);
+}
+
+.kabox-mode-switch-option:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.92);
+  outline-offset: -3px;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+}
+
+.kabox-mode-switch-option:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.kabox-mode-switch-option[data-active="true"] {
+  color: rgba(255, 255, 255, 0.98);
+  text-shadow: 0 1px 14px rgba(255, 255, 255, 0.28);
+}
+
+.kabox-mode-switch-dot {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.18), 0 0 0 rgba(255, 255, 255, 0);
+  transition: background 220ms var(--switch-ease), border-color 220ms var(--switch-ease), box-shadow 220ms var(--switch-ease), transform 260ms var(--switch-spring);
+}
+
+.kabox-mode-switch-dot::after {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 2px;
+  height: 2px;
+  content: "";
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  opacity: 0;
+  transition: opacity 220ms var(--switch-ease);
+}
+
+.kabox-mode-switch-option[data-active="true"] .kabox-mode-switch-dot {
+  border-color: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08), 0 0 14px rgba(255, 255, 255, 0.55);
+  transform: scale(1.08);
+}
+
+.kabox-mode-switch-option[data-active="true"] .kabox-mode-switch-dot::after {
+  opacity: 0;
+}
+
+.kabox-mode-switch-label {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes kabox-liquid-light {
+  0% {
+    opacity: 0.56;
+    transform: translate3d(-8%, -3%, 0) rotate(-12deg) scale(0.94);
+  }
+  100% {
+    opacity: 0.86;
+    transform: translate3d(112%, 7%, 0) rotate(-4deg) scale(1.08);
+  }
+}
+
+@media (min-width: 768px) {
+  .kabox-mode-switch {
+    --switch-height: 52px;
+    --switch-radius: 20px;
+  }
+
+  .kabox-mode-switch-option {
+    padding: 0 18px;
+  }
+
+  .kabox-mode-switch-label {
+    font-size: 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kabox-mode-switch::before {
+    animation: none;
+  }
+
+  .kabox-mode-switch-thumb,
+  .kabox-mode-switch-option,
+  .kabox-mode-switch-dot {
+    transition-duration: 1ms;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px))) {
+  .kabox-mode-switch {
+    background: rgba(20, 20, 20, 0.96);
+  }
+
+  .kabox-mode-switch-thumb {
+    background: rgba(76, 76, 76, 0.96);
+  }
+}
+
+.kabox-mode-switch {
+  --switch-fluid-duration: 520ms;
+  --switch-glow-duration: 280ms;
+  contain: layout paint;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  will-change: box-shadow;
+}
+
+.kabox-mode-switch:has(.kabox-mode-switch-option:hover:not(:disabled)) {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), inset 0 -1px 0 rgba(0, 0, 0, 0.38), 0 18px 38px rgba(0, 0, 0, 0.26), 0 4px 10px rgba(0, 0, 0, 0.32);
+}
+
+.kabox-mode-switch-thumb {
+  will-change: transform, border-radius, filter;
+  backface-visibility: hidden;
+  transform-origin: 50% 50%;
+  transform-style: preserve-3d;
+  transition: transform var(--switch-fluid-duration) var(--switch-spring), border-radius var(--switch-fluid-duration) var(--switch-spring), box-shadow var(--switch-glow-duration) var(--switch-ease), filter var(--switch-glow-duration) var(--switch-ease), background var(--switch-glow-duration) var(--switch-ease);
+  animation: kabox-thumb-breathe 4.8s var(--switch-ease) infinite;
+}
+
+.kabox-mode-switch-thumb-url {
+  border-radius: calc(var(--switch-radius) - 2px) calc(var(--switch-radius) - 6px) calc(var(--switch-radius) - 2px) calc(var(--switch-radius) - 6px);
+  filter: saturate(1.08) brightness(1.02);
+}
+
+.kabox-mode-switch[data-mode="local"] .kabox-mode-switch-thumb {
+  border-radius: calc(var(--switch-radius) - 6px) calc(var(--switch-radius) - 2px) calc(var(--switch-radius) - 6px) calc(var(--switch-radius) - 2px);
+}
+
+.kabox-mode-switch[data-mode="url"] .kabox-mode-switch-thumb {
+  border-radius: calc(var(--switch-radius) - 2px) calc(var(--switch-radius) - 6px) calc(var(--switch-radius) - 2px) calc(var(--switch-radius) - 6px);
+}
+
+.kabox-mode-switch-thumb::before {
+  will-change: transform, opacity;
+  animation: kabox-thumb-fluid 5.6s var(--switch-ease) infinite alternate;
+}
+
+.kabox-mode-switch[data-mode="url"] .kabox-mode-switch-thumb::before {
+  animation-name: kabox-thumb-fluid-url;
+}
+
+.kabox-mode-switch-thumb::after {
+  transition: opacity var(--switch-glow-duration) var(--switch-ease), transform var(--switch-fluid-duration) var(--switch-spring);
+}
+
+.kabox-mode-switch[data-mode="url"] .kabox-mode-switch-thumb::after {
+  transform: translateX(3%) scaleX(0.92);
+}
+
+.kabox-mode-switch-option {
+  min-height: 40px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kabox-mode-switch-option[data-active="true"] .kabox-mode-switch-label {
+  transform: translateY(-0.5px);
+}
+
+.kabox-mode-switch-label {
+  transition: color var(--switch-glow-duration) var(--switch-ease), transform var(--switch-fluid-duration) var(--switch-spring), letter-spacing var(--switch-glow-duration) var(--switch-ease), text-shadow var(--switch-glow-duration) var(--switch-ease);
+}
+
+.kabox-mode-switch-option[data-active="true"] .kabox-mode-switch-dot {
+  animation: kabox-dot-pulse 2.8s var(--switch-ease) infinite;
+}
+
+@keyframes kabox-thumb-breathe {
+  0%, 100% {
+    filter: saturate(1) brightness(1);
+  }
+  50% {
+    filter: saturate(1.08) brightness(1.025);
+  }
+}
+
+@keyframes kabox-thumb-fluid {
+  0% {
+    opacity: 0.46;
+    transform: translate3d(-16%, -8%, 0) rotate(-22deg) scale(0.86, 1.12);
+  }
+  42% {
+    opacity: 0.78;
+    transform: translate3d(20%, 5%, 0) rotate(-8deg) scale(1.16, 0.86);
+  }
+  100% {
+    opacity: 0.58;
+    transform: translate3d(82%, 1%, 0) rotate(12deg) scale(0.95, 1.08);
+  }
+}
+
+@keyframes kabox-thumb-fluid-url {
+  0% {
+    opacity: 0.5;
+    transform: translate3d(74%, 2%, 0) rotate(14deg) scale(0.94, 1.08);
+  }
+  48% {
+    opacity: 0.8;
+    transform: translate3d(24%, -5%, 0) rotate(3deg) scale(1.13, 0.88);
+  }
+  100% {
+    opacity: 0.58;
+    transform: translate3d(-18%, 5%, 0) rotate(-17deg) scale(0.9, 1.14);
+  }
+}
+
+@keyframes kabox-dot-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08), 0 0 14px rgba(255, 255, 255, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.035), 0 0 19px rgba(255, 255, 255, 0.64);
+  }
+}
+
+@media (min-width: 768px) {
+  .kabox-mode-switch-option {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kabox-mode-switch-thumb,
+  .kabox-mode-switch-thumb::before,
+  .kabox-mode-switch-option[data-active="true"] .kabox-mode-switch-dot {
+    animation: none;
+  }
+
+  .kabox-mode-switch-thumb,
+  .kabox-mode-switch-thumb::after,
+  .kabox-mode-switch-label {
+    transition-duration: 1ms;
+  }
+}

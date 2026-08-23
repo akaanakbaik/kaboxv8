@@ -33,11 +33,42 @@ export default function UploadBox() {
   const [results, setResults] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const fileInputRef = useRef(null);
+  const switchAudioContextRef = useRef(null);
 
   const addNotif = (msg, type = "success") => {
     const id = Math.random().toString(36).substring(2, 9);
     setNotifications(p => [{ id, msg, type }, ...p]);
     setTimeout(() => setNotifications(p => p.filter(n => n.id !== id)), 4000);
+  };
+
+  const playSwitchSound = (mode) => {
+    if (typeof window === "undefined") return;
+    const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextConstructor) return;
+    const context = switchAudioContextRef.current || new AudioContextConstructor();
+    switchAudioContextRef.current = context;
+    if (context.state === "suspended") void context.resume();
+    const now = context.currentTime;
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    const startFrequency = mode === "url" ? 560 : 430;
+    const endFrequency = mode === "url" ? 720 : 570;
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(startFrequency, now);
+    oscillator.frequency.exponentialRampToValueAtTime(endFrequency, now + 0.08);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.032, now + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start(now);
+    oscillator.stop(now + 0.145);
+  };
+
+  const switchTab = (mode) => {
+    if (isUploading || activeTab === mode) return;
+    setActiveTab(mode);
+    playSwitchSound(mode);
   };
 
   const addFiles = (selected) => {
@@ -158,9 +189,16 @@ export default function UploadBox() {
       </div>
 
       <div className="w-full bg-[#0a0a0a]/60 backdrop-blur-2xl border border-white/5 rounded-[2rem] p-4 md:p-6 shadow-2xl overflow-hidden">
-        <div className="flex bg-[#121212] rounded-2xl p-1 mb-5 border border-white/5">
-          <button onClick={() => !isUploading && setActiveTab("local")} className={`flex-1 py-2.5 text-[10px] md:text-xs font-bold tracking-widest uppercase rounded-xl transition-all ${activeTab === "local" ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/70"}`} disabled={isUploading}>Lokal</button>
-          <button onClick={() => !isUploading && setActiveTab("url")} className={`flex-1 py-2.5 text-[10px] md:text-xs font-bold tracking-widest uppercase rounded-xl transition-all ${activeTab === "url" ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/70"}`} disabled={isUploading}>Tautan URL</button>
+        <div className="kabox-mode-switch mb-5" data-mode={activeTab} role="tablist" aria-label="Mode unggah">
+          <div className={`kabox-mode-switch-thumb ${activeTab === "url" ? "kabox-mode-switch-thumb-url" : ""}`} aria-hidden="true" />
+          <button type="button" role="tab" aria-selected={activeTab === "local"} data-active={activeTab === "local"} onClick={() => switchTab("local")} className="kabox-mode-switch-option" disabled={isUploading}>
+            <span className="kabox-mode-switch-dot" aria-hidden="true" />
+            <span className="kabox-mode-switch-label">Lokal</span>
+          </button>
+          <button type="button" role="tab" aria-selected={activeTab === "url"} data-active={activeTab === "url"} onClick={() => switchTab("url")} className="kabox-mode-switch-option" disabled={isUploading}>
+            <span className="kabox-mode-switch-dot" aria-hidden="true" />
+            <span className="kabox-mode-switch-label">Tautan URL</span>
+          </button>
         </div>
 
         <AnimatePresence mode="wait">
