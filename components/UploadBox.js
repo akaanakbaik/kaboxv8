@@ -10,7 +10,10 @@ const expiryOptions = [
   { label: "Selamanya", value: "never" }
 ];
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://kabox-api.akadev.me").replace(/\/$/, "");
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://kabox.akadev.me").replace(/\/$/, "");
+const MAX_FILE_SIZE = 30 * 1024 * 1024;
+const MAX_FILES = 5;
+const ACCEPTED_MEDIA = "image/jpeg,image/png,image/gif,image/webp,image/avif,video/mp4,video/x-m4v,video/quicktime,video/webm,video/x-matroska,audio/mpeg,audio/mp4,audio/wav,audio/flac,audio/ogg";
 
 function retentionDays(value) {
   if (value === "1w") return 7;
@@ -21,7 +24,7 @@ function retentionDays(value) {
 export default function UploadBox() {
   const [activeTab, setActiveTab] = useState("local");
   const [files, setFiles] = useState([]);
-  const [urlInput, setUrlInput] = useState("");
+  const [urlInputs, setUrlInputs] = useState([""]);
   const [isDragging, setIsDragging] = useState(false);
   const [expiry, setExpiry] = useState("1d");
   const [isSelectOpen, setIsSelectOpen] = useState(false);
@@ -37,26 +40,38 @@ export default function UploadBox() {
     setTimeout(() => setNotifications(p => p.filter(n => n.id !== id)), 4000);
   };
 
+  const addFiles = (selected) => {
+    const validSizeFiles = selected.filter(file => file.size <= MAX_FILE_SIZE);
+    if (validSizeFiles.length !== selected.length) addNotif("Maksimal 30MB per media", "error");
+    const available = Math.max(0, MAX_FILES - files.length);
+    if (validSizeFiles.length > available) addNotif("Maksimal 5 media", "error");
+    setFiles(p => [...p, ...validSizeFiles].slice(0, MAX_FILES));
+  };
+
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
     if (activeTab !== "local") setActiveTab("local");
-    const dropped = Array.from(e.dataTransfer.files);
-    if (files.length + dropped.length > 5) return addNotif("Maksimal 5 media", "error");
-    setFiles(p => [...p, ...dropped].slice(0, 5));
+    addFiles(Array.from(e.dataTransfer.files));
   };
 
   const handleFileSelect = (e) => {
-    const selected = Array.from(e.target.files);
-    if (files.length + selected.length > 5) return addNotif("Maksimal 5 media", "error");
-    setFiles(p => [...p, ...selected].slice(0, 5));
+    addFiles(Array.from(e.target.files));
+    e.target.value = "";
   };
 
   const removeFile = (idx) => setFiles(files.filter((_, i) => i !== idx));
+  const addUrlInput = () => {
+    if (urlInputs.length >= MAX_FILES) return addNotif("Maksimal 5 tautan", "error");
+    setUrlInputs(p => [...p, ""]);
+  };
+  const removeUrlInput = (idx) => setUrlInputs(p => p.length === 1 ? [""] : p.filter((_, i) => i !== idx));
 
   const startUpload = async () => {
     if (activeTab === "local" && files.length === 0) return addNotif("Pilih media dahulu", "error");
-    if (activeTab === "url" && !urlInput) return addNotif("Masukkan tautan valid", "error");
+    const urls = urlInputs.map(url => url.trim());
+    if (activeTab === "url" && urls.some(url => !url)) return addNotif("Lengkapi semua kolom tautan", "error");
+    if (activeTab === "url" && urls.length === 0) return addNotif("Masukkan tautan valid", "error");
 
     setIsUploading(true);
     setProgress(0);
@@ -101,13 +116,13 @@ export default function UploadBox() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ urls: [urlInput], retentionDays: days })
+          body: JSON.stringify({ urls, retentionDays: days })
         });
         setProgress(80);
         const data = await res.json();
-        if (res.ok && data.success && data.files?.[0]) {
-          newResults.push({ name: data.files[0].originalName || "remote_media", url: data.files[0].url });
-          addNotif("Tautan berhasil ditarik");
+        if (res.ok && data.success && data.files?.length) {
+          data.files.forEach(item => newResults.push({ name: item.originalName || "remote_media", url: item.url }));
+          addNotif(`${newResults.length} tautan berhasil ditarik`);
         } else {
           throw new Error(data.error || "Peladen menolak tautan");
         }
@@ -120,7 +135,7 @@ export default function UploadBox() {
     setResults(p => [...newResults, ...p]);
     setIsUploading(false);
     if (activeTab === "local") setFiles([]);
-    else setUrlInput("");
+    else setUrlInputs([""]);
     setTimeout(() => setProgress(0), 1000);
   };
 
@@ -154,7 +169,7 @@ export default function UploadBox() {
               <div onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }} onDragLeave={() => setIsDragging(false)} onDrop={handleDrop} className={`relative group border border-dashed rounded-[1.5rem] p-8 md:p-10 flex flex-col items-center justify-center transition-all ${isDragging ? "border-white/50 bg-white/5" : "border-white/10 bg-[#121212]/50 hover:border-white/20 hover:bg-white/[0.02]"}`}>
                 <button onClick={() => fileInputRef.current.click()} disabled={isUploading} className="relative z-10 bg-white text-black px-6 py-3 rounded-xl font-black text-[10px] md:text-xs uppercase tracking-widest shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:scale-105 transition-transform disabled:opacity-50 disabled:hover:scale-100">Telusuri Media</button>
                 <p className="mt-4 text-[9px] md:text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] text-center">Maksimal 5 Berkas • Seret & Lepas</p>
-                <input type="file" multiple ref={fileInputRef} onChange={handleFileSelect} className="hidden" disabled={isUploading} />
+                <input type="file" multiple accept={ACCEPTED_MEDIA} ref={fileInputRef} onChange={handleFileSelect} className="hidden" disabled={isUploading} />
               </div>
               
               {files.length > 0 && !isUploading && (
@@ -170,9 +185,13 @@ export default function UploadBox() {
             </motion.div>
           ) : (
             <motion.div key="url" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex flex-col gap-3">
-              <div className="relative">
-                <input type="url" value={urlInput} onChange={(e) => setUrlInput(e.target.value)} disabled={isUploading} placeholder="https://contoh.com/media.mp4" className="w-full bg-[#121212] border border-white/10 rounded-[1.5rem] px-5 py-4 text-[10px] md:text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-white/30 focus:bg-white/5 transition-all" />
-              </div>
+              {urlInputs.map((url, index) => (
+                <div className="relative flex items-center gap-2" key={index}>
+                  <input type="url" value={url} onChange={(e) => setUrlInputs(p => p.map((item, i) => i === index ? e.target.value : item))} disabled={isUploading} placeholder="https://contoh.com/media.mp4" className="w-full bg-[#121212] border border-white/10 rounded-[1.5rem] px-5 py-4 text-[10px] md:text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-white/30 focus:bg-white/5 transition-all" />
+                  {urlInputs.length > 1 && <button onClick={() => removeUrlInput(index)} disabled={isUploading} className="shrink-0 text-red-400 hover:text-red-300 transition-colors p-2" aria-label="Hapus tautan">×</button>}
+                </div>
+              ))}
+              <button onClick={addUrlInput} disabled={isUploading || urlInputs.length >= MAX_FILES} className="self-start text-[9px] md:text-[10px] font-bold text-white/40 hover:text-white transition-colors uppercase tracking-widest disabled:opacity-30">+ Tambah tautan</button>
               <p className="text-[9px] font-medium text-white/30 uppercase tracking-widest text-center mt-2">Peladen akan menarik media secara langsung</p>
             </motion.div>
           )}
@@ -195,7 +214,7 @@ export default function UploadBox() {
             </AnimatePresence>
           </div>
 
-          <button onClick={startUpload} disabled={(activeTab === "local" && files.length === 0) || (activeTab === "url" && !urlInput) || isUploading} className={`w-2/3 py-3 rounded-xl font-black text-[10px] md:text-xs uppercase tracking-widest transition-all overflow-hidden relative ${((activeTab === "local" && files.length === 0) || (activeTab === "url" && !urlInput) || isUploading) ? "bg-[#161616] text-white/20" : "bg-white text-black hover:opacity-90 active:scale-[0.98]"}`}>
+          <button onClick={startUpload} disabled={(activeTab === "local" && files.length === 0) || (activeTab === "url" && (urlInputs.length === 0 || urlInputs.some(url => !url.trim()))) || isUploading} className={`w-2/3 py-3 rounded-xl font-black text-[10px] md:text-xs uppercase tracking-widest transition-all overflow-hidden relative ${((activeTab === "local" && files.length === 0) || (activeTab === "url" && (urlInputs.length === 0 || urlInputs.some(url => !url.trim()))) || isUploading) ? "bg-[#161616] text-white/20" : "bg-white text-black hover:opacity-90 active:scale-[0.98]"}`}>
             {isUploading ? (
               <span className="relative z-10 text-white mix-blend-difference">{progress}% Memproses</span>
             ) : "Mulai Unggah"}
