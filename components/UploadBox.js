@@ -35,6 +35,10 @@ export default function UploadBox() {
   const [notifications, setNotifications] = useState([]);
   const fileInputRef = useRef(null);
   const switchAudioContextRef = useRef(null);
+  const switchPressTimerRef = useRef(null);
+  const switchPointerRef = useRef({ pointerId: null, startX: 0, startProgress: 0, progress: 0, width: 1, dragging: false });
+  const suppressSwitchClickRef = useRef(false);
+  const [switchDrag, setSwitchDrag] = useState(null);
 
   const addNotif = (msg, type = "success") => {
     triggerHaptic(type === "error" ? "error" : "success");
@@ -68,10 +72,79 @@ export default function UploadBox() {
   };
 
   const switchTab = (mode) => {
+    if (suppressSwitchClickRef.current) {
+      suppressSwitchClickRef.current = false;
+      return;
+    }
     if (isUploading || activeTab === mode) return;
     setActiveTab(mode);
     triggerHaptic("tap");
     playSwitchSound(mode);
+  };
+
+  const clearSwitchPressTimer = () => {
+    if (switchPressTimerRef.current !== null) {
+      window.clearTimeout(switchPressTimerRef.current);
+      switchPressTimerRef.current = null;
+    }
+  };
+
+  const handleSwitchPointerDown = (event) => {
+    if (isUploading || (event.pointerType === "mouse" && event.button !== 0)) return;
+    const target = event.target.closest?.("[data-switch-mode]");
+    if (!target) return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const startProgress = activeTab === "url" ? 1 : 0;
+    switchPointerRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startProgress,
+      progress: startProgress,
+      width: Math.max(bounds.width, 1),
+      dragging: false
+    };
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    clearSwitchPressTimer();
+    switchPressTimerRef.current = window.setTimeout(() => {
+      switchPointerRef.current.dragging = true;
+      setSwitchDrag({ progress: switchPointerRef.current.progress, stretch: 1, tilt: 0 });
+    }, 260);
+  };
+
+  const handleSwitchPointerMove = (event) => {
+    const pointer = switchPointerRef.current;
+    if (pointer.pointerId !== event.pointerId) return;
+    const delta = event.clientX - pointer.startX;
+    if (!pointer.dragging && Math.abs(delta) > 8) {
+      clearSwitchPressTimer();
+      return;
+    }
+    if (!pointer.dragging) return;
+    event.preventDefault();
+    const travel = Math.max(pointer.width / 2, 1);
+    const progress = Math.max(0, Math.min(1, pointer.startProgress + delta / travel));
+    const stretch = 1 + Math.min(Math.abs(delta) / pointer.width, 0.085);
+    const tilt = Math.max(-2.4, Math.min(2.4, delta / pointer.width * 7));
+    pointer.progress = progress;
+    setSwitchDrag({ progress, stretch, tilt });
+  };
+
+  const finishSwitchPointer = (event, cancelled = false) => {
+    const pointer = switchPointerRef.current;
+    if (pointer.pointerId !== event.pointerId) return;
+    clearSwitchPressTimer();
+    if (pointer.dragging) {
+      const mode = !cancelled && pointer.progress >= 0.5 ? "url" : "local";
+      setSwitchDrag(null);
+      setActiveTab(mode);
+      if (mode !== activeTab && !cancelled) playSwitchSound(mode);
+      suppressSwitchClickRef.current = true;
+      window.setTimeout(() => {
+        suppressSwitchClickRef.current = false;
+      }, 0);
+    }
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    switchPointerRef.current = { pointerId: null, startX: 0, startProgress: 0, progress: 0, width: 1, dragging: false };
   };
 
   const addFiles = (selected) => {
@@ -200,13 +273,13 @@ export default function UploadBox() {
       </div>
 
       <div className="w-full bg-[#0a0a0a]/60 backdrop-blur-2xl border border-white/5 rounded-[2rem] p-4 md:p-6 shadow-2xl overflow-hidden">
-        <div className="kabox-mode-switch mb-5" data-mode={activeTab} role="tablist" aria-label="Mode unggah">
-          <div className={`kabox-mode-switch-thumb ${activeTab === "url" ? "kabox-mode-switch-thumb-url" : ""}`} aria-hidden="true" />
-          <button type="button" role="tab" aria-selected={activeTab === "local"} data-active={activeTab === "local"} onClick={() => switchTab("local")} className="kabox-mode-switch-option haptic-press" disabled={isUploading}>
+        <div className="kabox-mode-switch mb-5" data-mode={activeTab} data-dragging={switchDrag ? "true" : "false"} role="tablist" aria-label="Mode unggah" onPointerDown={handleSwitchPointerDown} onPointerMove={handleSwitchPointerMove} onPointerUp={finishSwitchPointer} onPointerCancel={(event) => finishSwitchPointer(event, true)}>
+          <div className={`kabox-mode-switch-thumb ${activeTab === "url" ? "kabox-mode-switch-thumb-url" : ""}`} style={switchDrag ? { "--switch-progress": switchDrag.progress, "--switch-stretch": switchDrag.stretch, "--switch-tilt": `${switchDrag.tilt}deg` } : undefined} aria-hidden="true" />
+          <button type="button" role="tab" aria-selected={activeTab === "local"} data-active={activeTab === "local"} data-switch-mode="local" onClick={() => switchTab("local")} className="kabox-mode-switch-option haptic-press" disabled={isUploading}>
             <span className="kabox-mode-switch-dot" aria-hidden="true" />
             <span className="kabox-mode-switch-label">Lokal</span>
           </button>
-          <button type="button" role="tab" aria-selected={activeTab === "url"} data-active={activeTab === "url"} onClick={() => switchTab("url")} className="kabox-mode-switch-option haptic-press" disabled={isUploading}>
+          <button type="button" role="tab" aria-selected={activeTab === "url"} data-active={activeTab === "url"} data-switch-mode="url" onClick={() => switchTab("url")} className="kabox-mode-switch-option haptic-press" disabled={isUploading}>
             <span className="kabox-mode-switch-dot" aria-hidden="true" />
             <span className="kabox-mode-switch-label">Tautan URL</span>
           </button>
