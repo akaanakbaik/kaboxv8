@@ -90,22 +90,39 @@ export default function UploadBox() {
     return { shell, thumb, shellRect, thumbRect, travel: Math.max(1, thumbRect.width + 4) };
   };
 
-  const setSwitchVisual = (rawProgress, startProgress, cachedTravel) => {
+  const setSwitchVisual = (rawProgress, startProgress, cachedTravel, velocity = 0) => {
     const travel = cachedTravel || getSwitchElements()?.travel;
     if (!travel) return;
-    const boundedProgress = rawProgress < 0 ? rawProgress * 0.16 : rawProgress > 1 ? 1 + (rawProgress - 1) * 0.16 : rawProgress;
     const edgeDistance = rawProgress < 0 ? -rawProgress : rawProgress > 1 ? rawProgress - 1 : 0;
-    const travelDistance = Math.abs(boundedProgress - startProgress);
-    const stretch = clamp(travelDistance * 0.34 + edgeDistance * 0.28, 0, 0.24);
-    const compression = clamp(edgeDistance * 2.2, 0, 1);
-    const scaleX = 1 + stretch * 0.9 - compression * 0.2;
-    const scaleY = 1 - stretch * 0.36 + compression * 0.14;
-    const shift = (boundedProgress - startProgress) * travel;
-    const rotation = clamp((boundedProgress - startProgress) * 7, -7, 7);
-    const radius = 13 + (1 - compression) * 5 + stretch * 12;
-    const glow = 1 + stretch * 1.8 + compression * 1.1;
-    const specular = 0.68 + stretch * 0.9 + compression * 0.5;
-    switchVisualRef.current = { rawProgress, boundedProgress, startProgress, edgeDistance, shift, scaleX, scaleY, rotation, radius, glow, specular };
+    const edgePressure = clamp(1 - Math.exp(-edgeDistance * 3.4), 0, 1);
+    const rubber = value => (1 - Math.exp(-Math.abs(value) * 3.2)) * 0.16 * Math.sign(value);
+    const boundedProgress = rawProgress < 0 ? rubber(rawProgress) : rawProgress > 1 ? 1 + rubber(rawProgress - 1) : rawProgress;
+    const signedTravel = boundedProgress - startProgress;
+    const travelDistance = clamp(Math.abs(signedTravel), 0, 1);
+    const curve = 0.5 - Math.cos(travelDistance * Math.PI) * 0.5;
+    const direction = signedTravel < 0 ? -1 : 1;
+    const momentum = clamp(Math.abs(velocity) * 0.09, 0, 0.2);
+    const stretch = clamp(curve * 0.2 + momentum + edgePressure * 0.12, 0, 0.44);
+    const scaleX = 1 + stretch * 1.12 + edgePressure * 0.08;
+    const scaleY = 1 - stretch * 0.42 + edgePressure * 0.14;
+    const shift = signedTravel * travel;
+    const rotation = clamp(signedTravel * 9 + velocity * 2.4, -10, 10);
+    const skew = clamp(signedTravel * 12 + velocity * 3.4, -12, 12);
+    const frontRadius = clamp(15 + stretch * 17 + edgePressure * 5, 10, 34);
+    const backRadius = clamp(15 + stretch * 5 - edgePressure * 5, 8, 26);
+    const topLeft = direction > 0 ? backRadius : frontRadius;
+    const topRight = direction > 0 ? frontRadius : backRadius;
+    const bottomRight = direction > 0 ? frontRadius : backRadius;
+    const bottomLeft = direction > 0 ? backRadius : frontRadius;
+    const radius = `${topLeft.toFixed(2)}px ${topRight.toFixed(2)}px ${bottomRight.toFixed(2)}px ${bottomLeft.toFixed(2)}px`;
+    const glow = 1 + stretch * 1.9 + edgePressure * 1.25;
+    const specular = 0.68 + stretch * 1.05 + edgePressure * 0.54;
+    const flow = clamp(signedTravel * 135 + velocity * 18, -100, 100);
+    const glint = clamp(-flow * 0.18, -18, 18);
+    const labelScale = clamp(1 + stretch * 0.16 + edgePressure * 0.035, 1, 1.08);
+    const edgeBlur = clamp(edgePressure * 1.35 + stretch * 0.35, 0, 2.2);
+    const edgeOpacity = clamp(0.42 + edgePressure * 0.35 + stretch * 0.12, 0.42, 0.86);
+    switchVisualRef.current = { rawProgress, boundedProgress, startProgress, edgeDistance, shift, scaleX, scaleY, rotation, skew, radius, glow, specular, flow, glint, labelScale, edgeBlur, edgeOpacity };
     if (switchFrameRef.current) return;
     switchFrameRef.current = requestAnimationFrame(() => {
       const visual = switchVisualRef.current;
@@ -115,9 +132,15 @@ export default function UploadBox() {
         thumb.style.setProperty("--switch-liquid-scale-x", visual.scaleX.toFixed(3));
         thumb.style.setProperty("--switch-liquid-scale-y", visual.scaleY.toFixed(3));
         thumb.style.setProperty("--switch-liquid-rotate", `${visual.rotation.toFixed(2)}deg`);
-        thumb.style.setProperty("--switch-liquid-radius", `${visual.radius.toFixed(2)}px`);
+        thumb.style.setProperty("--switch-liquid-skew", `${visual.skew.toFixed(2)}deg`);
+        thumb.style.setProperty("--switch-liquid-radius", visual.radius);
         thumb.style.setProperty("--switch-liquid-glow", visual.glow.toFixed(3));
         thumb.style.setProperty("--switch-liquid-specular", visual.specular.toFixed(3));
+        thumb.style.setProperty("--switch-liquid-flow", `${visual.flow.toFixed(2)}%`);
+        thumb.style.setProperty("--switch-liquid-glint", `${visual.glint.toFixed(2)}%`);
+        thumb.style.setProperty("--switch-liquid-label-scale", visual.labelScale.toFixed(3));
+        thumb.style.setProperty("--switch-liquid-edge-blur", `${visual.edgeBlur.toFixed(2)}px`);
+        thumb.style.setProperty("--switch-liquid-edge-opacity", visual.edgeOpacity.toFixed(3));
       }
       switchFrameRef.current = null;
     });
@@ -126,7 +149,7 @@ export default function UploadBox() {
   const resetSwitchVisual = () => {
     const elements = getSwitchElements();
     if (!elements) return;
-    ["--switch-drag-x", "--switch-liquid-scale-x", "--switch-liquid-scale-y", "--switch-liquid-rotate", "--switch-liquid-radius", "--switch-liquid-glow", "--switch-liquid-specular"].forEach(property => elements.thumb.style.removeProperty(property));
+    ["--switch-drag-x", "--switch-liquid-scale-x", "--switch-liquid-scale-y", "--switch-liquid-rotate", "--switch-liquid-skew", "--switch-liquid-radius", "--switch-liquid-glow", "--switch-liquid-specular", "--switch-liquid-flow", "--switch-liquid-glint", "--switch-liquid-label-scale", "--switch-liquid-edge-blur", "--switch-liquid-edge-opacity"].forEach(property => elements.thumb.style.removeProperty(property));
     switchVisualRef.current = null;
   };
 
@@ -150,7 +173,7 @@ export default function UploadBox() {
     if (!elements) return;
     resetSwitchVisual();
     const progress = activeTab === "url" ? 1 : 0;
-    switchGestureRef.current = { phase: "pending", pointerId: event.pointerId, startX: event.clientX, startProgress: progress, mode, target: event.currentTarget, shellLeft: elements.shellRect.left, thumbWidth: elements.thumbRect.width, travel: elements.travel };
+    switchGestureRef.current = { phase: "pending", pointerId: event.pointerId, startX: event.clientX, lastX: event.clientX, lastMoveAt: performance.now(), startProgress: progress, mode, target: event.currentTarget, shellLeft: elements.shellRect.left, thumbWidth: elements.thumbRect.width, travel: elements.travel };
     event.currentTarget.setPointerCapture?.(event.pointerId);
     switchPressTimerRef.current = setTimeout(() => {
       const gesture = switchGestureRef.current;
@@ -174,7 +197,12 @@ export default function UploadBox() {
     }
     if (gesture.phase !== "dragging") return;
     event.preventDefault();
-    setSwitchVisual(getSwitchProgress(event.clientX, gesture), gesture.startProgress, gesture.travel);
+    const now = performance.now();
+    const elapsed = Math.max(1, now - gesture.lastMoveAt);
+    const velocity = (event.clientX - gesture.lastX) / elapsed;
+    gesture.lastX = event.clientX;
+    gesture.lastMoveAt = now;
+    setSwitchVisual(getSwitchProgress(event.clientX, gesture), gesture.startProgress, gesture.travel, velocity);
   };
 
   const finishSwitchGesture = (event, canceled = false) => {
@@ -332,7 +360,10 @@ export default function UploadBox() {
 
       <div className="w-full bg-[#0a0a0a]/60 backdrop-blur-2xl border border-white/5 rounded-[2rem] p-4 md:p-6 shadow-2xl overflow-hidden">
         <div ref={switchRef} className="kabox-mode-switch mb-5" data-mode={activeTab} data-interacting={isSwitchInteracting} role="tablist" aria-label="Mode unggah">
-          <div className={`kabox-mode-switch-thumb ${activeTab === "url" ? "kabox-mode-switch-thumb-url" : ""}`} aria-hidden="true" />
+          <div className={`kabox-mode-switch-thumb ${activeTab === "url" ? "kabox-mode-switch-thumb-url" : ""}`} aria-hidden="true">
+            <span className="kabox-mode-switch-glass-label"><span className="kabox-mode-switch-glass-dot" />{activeTab === "url" ? "Tautan URL" : "Lokal"}</span>
+            <span className="kabox-mode-switch-glass-edge" />
+          </div>
           <button type="button" role="tab" aria-selected={activeTab === "local"} aria-pressed={activeTab === "local"} data-active={activeTab === "local"} onClick={() => handleSwitchClick("local")} onPointerDown={(event) => handleSwitchPointerDown("local", event)} onPointerMove={handleSwitchPointerMove} onPointerUp={finishSwitchGesture} onPointerCancel={(event) => finishSwitchGesture(event, true)} onContextMenu={handleSwitchContextMenu} className="kabox-mode-switch-option" disabled={isUploading}>
             <span className="kabox-mode-switch-dot" aria-hidden="true" />
             <span className="kabox-mode-switch-label">Lokal</span>
