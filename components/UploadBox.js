@@ -158,9 +158,16 @@ export default function UploadBox() {
       </div>
 
       <div className="w-full bg-[#0a0a0a]/60 backdrop-blur-2xl border border-white/5 rounded-[2rem] p-4 md:p-6 shadow-2xl overflow-hidden">
-        <div className="flex bg-[#121212] rounded-2xl p-1 mb-5 border border-white/5">
-          <button onClick={() => !isUploading && setActiveTab("local")} className={`flex-1 py-2.5 text-[10px] md:text-xs font-bold tracking-widest uppercase rounded-xl transition-all ${activeTab === "local" ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/70"}`} disabled={isUploading}>Lokal</button>
-          <button onClick={() => !isUploading && setActiveTab("url")} className={`flex-1 py-2.5 text-[10px] md:text-xs font-bold tracking-widest uppercase rounded-xl transition-all ${activeTab === "url" ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/70"}`} disabled={isUploading}>Tautan URL</button>
+        <div className="kabox-mode-switch mb-5" role="tablist" aria-label="Mode unggah">
+          <div className={`kabox-mode-switch-thumb ${activeTab === "url" ? "kabox-mode-switch-thumb-url" : ""}`} aria-hidden="true" />
+          <button type="button" role="tab" aria-selected={activeTab === "local"} data-active={activeTab === "local"} onClick={() => !isUploading && setActiveTab("local")} className="kabox-mode-switch-option" disabled={isUploading}>
+            <span className="kabox-mode-switch-dot" aria-hidden="true" />
+            <span className="kabox-mode-switch-label">Lokal</span>
+          </button>
+          <button type="button" role="tab" aria-selected={activeTab === "url"} data-active={activeTab === "url"} onClick={() => !isUploading && setActiveTab("url")} className="kabox-mode-switch-option" disabled={isUploading}>
+            <span className="kabox-mode-switch-dot" aria-hidden="true" />
+            <span className="kabox-mode-switch-label">Tautan URL</span>
+          </button>
         </div>
 
         <AnimatePresence mode="wait">
