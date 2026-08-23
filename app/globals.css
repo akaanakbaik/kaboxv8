@@ -440,6 +440,7 @@
   }
 }
 
+
 @media (hover: none) {
   .haptic-press {
     will-change: transform;
@@ -455,54 +456,4 @@
   0%, 100% { transform: scale(1); }
   35% { transform: scale(0.975) translateX(-1px); }
   70% { transform: scale(0.985) translateX(1px); }
-}
-
-.kabox-mode-switch-thumb {
-  --switch-progress: 0;
-  --switch-stretch: 1;
-  --switch-tilt: 0deg;
-  cursor: grab;
-  transform: translate3d(calc((100% + var(--switch-gap)) * var(--switch-progress)), 0, 0) rotate(var(--switch-tilt)) scaleX(var(--switch-stretch));
-}
-
-.kabox-mode-switch-thumb-url {
-  --switch-progress: 1;
-}
-
-.kabox-mode-switch[data-dragging="true"] {
-  cursor: grabbing;
-  border-color: rgba(255, 255, 255, 0.26);
-}
-
-.kabox-mode-switch[data-dragging="true"] .kabox-mode-switch-thumb {
-  cursor: grabbing;
-  transition: transform 70ms linear, border-radius 150ms var(--switch-ease), box-shadow 150ms var(--switch-ease), filter 150ms var(--switch-ease), background 150ms var(--switch-ease);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.52), inset 0 -1px 0 rgba(0, 0, 0, 0.24), 0 8px 22px rgba(0, 0, 0, 0.38), 0 0 22px rgba(255, 255, 255, 0.08);
-}
-
-.kabox-mode-switch[data-dragging="true"] .kabox-mode-switch-thumb::before {
-  animation-duration: 1.8s;
-  opacity: 0.9;
-}
-
-.kabox-mode-switch-option {
-  cursor: grab;
-}
-
-.kabox-mode-switch[data-dragging="true"] .kabox-mode-switch-option {
-  cursor: grabbing;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .kabox-mode-switch[data-dragging="true"] .kabox-mode-switch-thumb {
-    transition-duration: 1ms;
-  }
-}
-
-.kabox-mode-switch {
-  touch-action: none;
-}
-
-.kabox-mode-switch .haptic-press {
-  touch-action: none;
 }
