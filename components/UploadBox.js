@@ -10,7 +10,7 @@ const expiryOptions = [
   { label: "Selamanya", value: "never" }
 ];
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://kabox.akadev.me").replace(/\/$/, "");
+const API_BASE_URL = (typeof window !== "undefined" && window.location.hostname === "kabox.akadev.me" ? window.location.origin : process.env.NEXT_PUBLIC_API_BASE_URL || "https://kabox.akadev.me").replace(/\/$/, "");
 const MAX_FILE_SIZE = 30 * 1024 * 1024;
 const MAX_FILES = 5;
 const ACCEPTED_MEDIA = "image/jpeg,image/png,image/gif,image/webp,image/avif,video/mp4,video/x-m4v,video/quicktime,video/webm,video/x-matroska,audio/mpeg,audio/mp4,audio/wav,audio/flac,audio/ogg";
