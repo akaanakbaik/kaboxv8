@@ -120,10 +120,9 @@ export default function UploadBox() {
     const flow = clamp(signedTravel * 135 + velocity * 18, -100, 100);
     const glint = clamp(-flow * 0.18, -18, 18);
     const labelScale = clamp(1.025 + stretch * 0.32 + edgePressure * 0.11, 1.025, 1.18);
-    const labelBlur = clamp(edgePressure * 0.72 + stretch * 0.08, 0, 0.85);
     const edgeBlur = clamp(edgePressure * 1.65 + stretch * 0.48, 0, 2.8);
     const edgeOpacity = clamp(0.42 + edgePressure * 0.35 + stretch * 0.12, 0.42, 0.86);
-    switchVisualRef.current = { rawProgress, boundedProgress, startProgress, edgeDistance, shift, scaleX, scaleY, rotation, skew, radius, glow, specular, flow, glint, labelScale, labelBlur, edgeBlur, edgeOpacity };
+    switchVisualRef.current = { rawProgress, boundedProgress, startProgress, edgeDistance, shift, scaleX, scaleY, rotation, skew, radius, glow, specular, flow, glint, labelScale, edgeBlur, edgeOpacity };
     if (switchFrameRef.current) return;
     switchFrameRef.current = requestAnimationFrame(() => {
       const visual = switchVisualRef.current;
@@ -142,7 +141,13 @@ export default function UploadBox() {
         thumb.style.setProperty("--switch-liquid-label-scale", visual.labelScale.toFixed(3));
         thumb.style.setProperty("--switch-liquid-edge-blur", `${visual.edgeBlur.toFixed(2)}px`);
         thumb.style.setProperty("--switch-liquid-edge-opacity", visual.edgeOpacity.toFixed(3));
-        switchRef.current?.style.setProperty("--switch-liquid-label-blur", `${visual.labelBlur.toFixed(2)}px`);
+        switchRef.current?.style.setProperty("--switch-liquid-lens-x", `${visual.shift.toFixed(2)}px`);
+        switchRef.current?.style.setProperty("--switch-liquid-lens-scale", visual.labelScale.toFixed(3));
+        switchRef.current?.style.setProperty("--switch-liquid-lens-blur", `${visual.edgeBlur.toFixed(2)}px`);
+        switchRef.current?.style.setProperty("--switch-liquid-lens-opacity", visual.edgeOpacity.toFixed(3));
+        switchRef.current?.style.setProperty("--switch-liquid-lens-rotation", `${(visual.rotation * 0.35).toFixed(2)}deg`);
+        switchRef.current?.style.setProperty("--switch-liquid-lens-glint", `${visual.glint.toFixed(2)}%`);
+        switchRef.current?.style.setProperty("--switch-liquid-lens-radius", visual.radius);
       }
       switchFrameRef.current = null;
     });
@@ -152,7 +157,7 @@ export default function UploadBox() {
     const elements = getSwitchElements();
     if (!elements) return;
     ["--switch-drag-x", "--switch-liquid-scale-x", "--switch-liquid-scale-y", "--switch-liquid-rotate", "--switch-liquid-skew", "--switch-liquid-radius", "--switch-liquid-glow", "--switch-liquid-specular", "--switch-liquid-flow", "--switch-liquid-glint", "--switch-liquid-label-scale", "--switch-liquid-edge-blur", "--switch-liquid-edge-opacity"].forEach(property => elements.thumb.style.removeProperty(property));
-    elements.shell.style.removeProperty("--switch-liquid-label-blur");
+    ["--switch-liquid-lens-x", "--switch-liquid-lens-scale", "--switch-liquid-lens-blur", "--switch-liquid-lens-opacity", "--switch-liquid-lens-rotation", "--switch-liquid-lens-glint", "--switch-liquid-lens-radius"].forEach(property => elements.shell.style.removeProperty(property));
     switchVisualRef.current = null;
   };
 
@@ -364,8 +369,14 @@ export default function UploadBox() {
       <div className="w-full bg-[#0a0a0a]/60 backdrop-blur-2xl border border-white/5 rounded-[2rem] p-4 md:p-6 shadow-2xl overflow-hidden">
         <div ref={switchRef} className="kabox-mode-switch mb-5" data-mode={activeTab} data-interacting={isSwitchInteracting} role="tablist" aria-label="Mode unggah">
           <div className={`kabox-mode-switch-thumb ${activeTab === "url" ? "kabox-mode-switch-thumb-url" : ""}`} aria-hidden="true">
-            <span className="kabox-mode-switch-glass-label"><span className="kabox-mode-switch-glass-dot" />{activeTab === "url" ? "Tautan URL" : "Lokal"}</span>
             <span className="kabox-mode-switch-glass-edge" />
+          </div>
+          <div className="kabox-mode-switch-lens" aria-hidden="true">
+            <div className="kabox-mode-switch-lens-content">
+              <span className="kabox-mode-switch-lens-label"><span className="kabox-mode-switch-lens-dot" />Lokal</span>
+              <span className="kabox-mode-switch-lens-label"><span className="kabox-mode-switch-lens-dot" />Tautan URL</span>
+            </div>
+            <span className="kabox-mode-switch-lens-edge" />
           </div>
           <button type="button" role="tab" aria-selected={activeTab === "local"} aria-pressed={activeTab === "local"} data-active={activeTab === "local"} onClick={() => handleSwitchClick("local")} onPointerDown={(event) => handleSwitchPointerDown("local", event)} onPointerMove={handleSwitchPointerMove} onPointerUp={finishSwitchGesture} onPointerCancel={(event) => finishSwitchGesture(event, true)} onContextMenu={handleSwitchContextMenu} className="kabox-mode-switch-option" disabled={isUploading}>
             <span className="kabox-mode-switch-dot" aria-hidden="true" />
