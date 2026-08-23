@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const expiryOptions = [
@@ -34,6 +34,13 @@ export default function UploadBox() {
   const [notifications, setNotifications] = useState([]);
   const fileInputRef = useRef(null);
   const switchAudioContextRef = useRef(null);
+  const switchRef = useRef(null);
+  const switchPressTimerRef = useRef(null);
+  const switchFrameRef = useRef(null);
+  const switchGestureRef = useRef(null);
+  const switchSuppressClickRef = useRef(false);
+  const switchVisualRef = useRef(null);
+  const [isSwitchInteracting, setIsSwitchInteracting] = useState(false);
 
   const addNotif = (msg, type = "success") => {
     const id = Math.random().toString(36).substring(2, 9);
@@ -70,6 +77,141 @@ export default function UploadBox() {
     setActiveTab(mode);
     playSwitchSound(mode);
   };
+
+  const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+  const getSwitchElements = () => {
+    const shell = switchRef.current;
+    if (!shell) return null;
+    const thumb = shell.querySelector(".kabox-mode-switch-thumb");
+    if (!thumb) return null;
+    const shellRect = shell.getBoundingClientRect();
+    const thumbRect = thumb.getBoundingClientRect();
+    return { shell, thumb, shellRect, thumbRect, travel: Math.max(1, thumbRect.width + 4) };
+  };
+
+  const setSwitchVisual = (rawProgress, startProgress, cachedTravel) => {
+    const travel = cachedTravel || getSwitchElements()?.travel;
+    if (!travel) return;
+    const boundedProgress = rawProgress < 0 ? rawProgress * 0.16 : rawProgress > 1 ? 1 + (rawProgress - 1) * 0.16 : rawProgress;
+    const edgeDistance = rawProgress < 0 ? -rawProgress : rawProgress > 1 ? rawProgress - 1 : 0;
+    const travelDistance = Math.abs(boundedProgress - startProgress);
+    const stretch = clamp(travelDistance * 0.34 + edgeDistance * 0.28, 0, 0.24);
+    const compression = clamp(edgeDistance * 2.2, 0, 1);
+    const scaleX = 1 + stretch * 0.9 - compression * 0.2;
+    const scaleY = 1 - stretch * 0.36 + compression * 0.14;
+    const shift = (boundedProgress - startProgress) * travel;
+    const rotation = clamp((boundedProgress - startProgress) * 7, -7, 7);
+    const radius = 13 + (1 - compression) * 5 + stretch * 12;
+    const glow = 1 + stretch * 1.8 + compression * 1.1;
+    const specular = 0.68 + stretch * 0.9 + compression * 0.5;
+    switchVisualRef.current = { rawProgress, boundedProgress, startProgress, edgeDistance, shift, scaleX, scaleY, rotation, radius, glow, specular };
+    if (switchFrameRef.current) return;
+    switchFrameRef.current = requestAnimationFrame(() => {
+      const visual = switchVisualRef.current;
+      const thumb = switchRef.current?.querySelector(".kabox-mode-switch-thumb");
+      if (visual && thumb) {
+        thumb.style.setProperty("--switch-drag-x", `${visual.shift}px`);
+        thumb.style.setProperty("--switch-liquid-scale-x", visual.scaleX.toFixed(3));
+        thumb.style.setProperty("--switch-liquid-scale-y", visual.scaleY.toFixed(3));
+        thumb.style.setProperty("--switch-liquid-rotate", `${visual.rotation.toFixed(2)}deg`);
+        thumb.style.setProperty("--switch-liquid-radius", `${visual.radius.toFixed(2)}px`);
+        thumb.style.setProperty("--switch-liquid-glow", visual.glow.toFixed(3));
+        thumb.style.setProperty("--switch-liquid-specular", visual.specular.toFixed(3));
+      }
+      switchFrameRef.current = null;
+    });
+  };
+
+  const resetSwitchVisual = () => {
+    const elements = getSwitchElements();
+    if (!elements) return;
+    ["--switch-drag-x", "--switch-liquid-scale-x", "--switch-liquid-scale-y", "--switch-liquid-rotate", "--switch-liquid-radius", "--switch-liquid-glow", "--switch-liquid-specular"].forEach(property => elements.thumb.style.removeProperty(property));
+    switchVisualRef.current = null;
+  };
+
+  const clearSwitchPress = () => {
+    if (switchPressTimerRef.current) {
+      clearTimeout(switchPressTimerRef.current);
+      switchPressTimerRef.current = null;
+    }
+  };
+
+  const getSwitchProgress = (clientX, gesture) => {
+    if (!gesture) return 0;
+    const center = clientX - gesture.shellLeft - gesture.thumbWidth / 2 - 4;
+    return center / gesture.travel;
+  };
+
+  const handleSwitchPointerDown = (mode, event) => {
+    if (isUploading || event.button > 0) return;
+    clearSwitchPress();
+    const elements = getSwitchElements();
+    if (!elements) return;
+    resetSwitchVisual();
+    const progress = activeTab === "url" ? 1 : 0;
+    switchGestureRef.current = { phase: "pending", pointerId: event.pointerId, startX: event.clientX, startProgress: progress, mode, target: event.currentTarget, shellLeft: elements.shellRect.left, thumbWidth: elements.thumbRect.width, travel: elements.travel };
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    switchPressTimerRef.current = setTimeout(() => {
+      const gesture = switchGestureRef.current;
+      if (!gesture || gesture.phase !== "pending") return;
+      gesture.phase = "dragging";
+      setIsSwitchInteracting(true);
+      setSwitchVisual(progress, progress, gesture.travel);
+    }, 340);
+  };
+
+  const handleSwitchPointerMove = (event) => {
+    const gesture = switchGestureRef.current;
+    if (!gesture || gesture.pointerId !== event.pointerId) return;
+    const distance = Math.abs(event.clientX - gesture.startX);
+    if (gesture.phase === "pending") {
+      if (distance > 10) {
+        clearSwitchPress();
+        switchGestureRef.current = null;
+      }
+      return;
+    }
+    if (gesture.phase !== "dragging") return;
+    event.preventDefault();
+    setSwitchVisual(getSwitchProgress(event.clientX, gesture), gesture.startProgress, gesture.travel);
+  };
+
+  const finishSwitchGesture = (event, canceled = false) => {
+    clearSwitchPress();
+    const gesture = switchGestureRef.current;
+    if (!gesture || gesture.pointerId !== event.pointerId) return;
+    const wasDragging = gesture.phase === "dragging";
+    if (wasDragging) {
+      switchSuppressClickRef.current = true;
+      const currentProgress = switchVisualRef.current?.boundedProgress ?? gesture.startProgress;
+      const nextMode = !canceled && currentProgress >= 0.5 ? "url" : "local";
+      setIsSwitchInteracting(false);
+      window.setTimeout(() => {
+        resetSwitchVisual();
+        if (!canceled && nextMode !== activeTab) switchTab(nextMode);
+      }, 24);
+    } else {
+      switchGestureRef.current = null;
+    }
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    if (wasDragging) switchGestureRef.current = null;
+  };
+
+  const handleSwitchClick = (mode) => {
+    if (switchSuppressClickRef.current) {
+      switchSuppressClickRef.current = false;
+      return;
+    }
+    switchTab(mode);
+  };
+
+  const handleSwitchContextMenu = (event) => event.preventDefault();
+
+  useEffect(() => () => {
+    clearSwitchPress();
+    if (switchFrameRef.current) cancelAnimationFrame(switchFrameRef.current);
+  }, []);
 
   const addFiles = (selected) => {
     const validSizeFiles = selected.filter(file => file.size <= MAX_FILE_SIZE);
@@ -189,13 +331,13 @@ export default function UploadBox() {
       </div>
 
       <div className="w-full bg-[#0a0a0a]/60 backdrop-blur-2xl border border-white/5 rounded-[2rem] p-4 md:p-6 shadow-2xl overflow-hidden">
-        <div className="kabox-mode-switch mb-5" data-mode={activeTab} role="tablist" aria-label="Mode unggah">
+        <div ref={switchRef} className="kabox-mode-switch mb-5" data-mode={activeTab} data-interacting={isSwitchInteracting} role="tablist" aria-label="Mode unggah">
           <div className={`kabox-mode-switch-thumb ${activeTab === "url" ? "kabox-mode-switch-thumb-url" : ""}`} aria-hidden="true" />
-          <button type="button" role="tab" aria-selected={activeTab === "local"} data-active={activeTab === "local"} onClick={() => switchTab("local")} className="kabox-mode-switch-option" disabled={isUploading}>
+          <button type="button" role="tab" aria-selected={activeTab === "local"} aria-pressed={activeTab === "local"} data-active={activeTab === "local"} onClick={() => handleSwitchClick("local")} onPointerDown={(event) => handleSwitchPointerDown("local", event)} onPointerMove={handleSwitchPointerMove} onPointerUp={finishSwitchGesture} onPointerCancel={(event) => finishSwitchGesture(event, true)} onContextMenu={handleSwitchContextMenu} className="kabox-mode-switch-option" disabled={isUploading}>
             <span className="kabox-mode-switch-dot" aria-hidden="true" />
             <span className="kabox-mode-switch-label">Lokal</span>
           </button>
-          <button type="button" role="tab" aria-selected={activeTab === "url"} data-active={activeTab === "url"} onClick={() => switchTab("url")} className="kabox-mode-switch-option" disabled={isUploading}>
+          <button type="button" role="tab" aria-selected={activeTab === "url"} aria-pressed={activeTab === "url"} data-active={activeTab === "url"} onClick={() => handleSwitchClick("url")} onPointerDown={(event) => handleSwitchPointerDown("url", event)} onPointerMove={handleSwitchPointerMove} onPointerUp={finishSwitchGesture} onPointerCancel={(event) => finishSwitchGesture(event, true)} onContextMenu={handleSwitchContextMenu} className="kabox-mode-switch-option" disabled={isUploading}>
             <span className="kabox-mode-switch-dot" aria-hidden="true" />
             <span className="kabox-mode-switch-label">Tautan URL</span>
           </button>
