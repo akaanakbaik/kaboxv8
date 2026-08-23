@@ -10,6 +10,14 @@ const expiryOptions = [
   { label: "Selamanya", value: "never" }
 ];
 
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://kabox-api.akadev.me").replace(/\/$/, "");
+
+function retentionDays(value) {
+  if (value === "1w") return 7;
+  if (value === "never") return 30;
+  return 1;
+}
+
 export default function UploadBox() {
   const [activeTab, setActiveTab] = useState("local");
   const [files, setFiles] = useState([]);
@@ -49,60 +57,62 @@ export default function UploadBox() {
   const startUpload = async () => {
     if (activeTab === "local" && files.length === 0) return addNotif("Pilih media dahulu", "error");
     if (activeTab === "url" && !urlInput) return addNotif("Masukkan tautan valid", "error");
-    
+
     setIsUploading(true);
     setProgress(0);
     const newResults = [];
+    const days = retentionDays(expiry);
 
     if (activeTab === "local") {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+      try {
         const formData = new FormData();
-        formData.append("file", file);
-
-        try {
-          const url = await new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            xhr.withCredentials = false;
-            xhr.open("POST", "https://api.kabox.my.id/api/upload", true);
-            xhr.setRequestHeader("x-expire", expiry);
-            xhr.upload.onprogress = (e) => {
-              if (e.lengthComputable) {
-                const fileProg = e.loaded / e.total;
-                setProgress(Math.round(((i + fileProg) / files.length) * 100));
-              }
-            };
-            xhr.onload = () => {
-              if (xhr.status === 200) resolve(JSON.parse(xhr.responseText).url);
-              else reject(`Status ${xhr.status}`);
-            };
-            xhr.onerror = () => reject("Koneksi terputus");
-            xhr.send(formData);
-          });
-          newResults.push({ name: file.name, url });
-          addNotif(`Berhasil: ${file.name}`);
-        } catch (err) {
-          addNotif(`Gagal: ${file.name} - ${err}`, "error");
-        }
+        files.forEach(file => formData.append("files", file));
+        formData.append("retentionDays", String(days));
+        const data = await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.withCredentials = true;
+          xhr.open("POST", `${API_BASE_URL}/api/upload/file`, true);
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
+          };
+          xhr.onload = () => {
+            let payload;
+            try {
+              payload = JSON.parse(xhr.responseText || "{}");
+            } catch {
+              reject(new Error(`Status ${xhr.status}`));
+              return;
+            }
+            if (xhr.status >= 200 && xhr.status < 300 && payload.success) resolve(payload);
+            else reject(new Error(payload.error || `Status ${xhr.status}`));
+          };
+          xhr.onerror = () => reject(new Error("Koneksi terputus"));
+          xhr.send(formData);
+        });
+        data.files.forEach((item, index) => newResults.push({ name: item.originalName || files[index]?.name || item.name, url: item.url }));
+        addNotif(`${newResults.length} media berhasil diunggah`);
+      } catch (err) {
+        addNotif(err instanceof Error ? err.message : "Upload gagal", "error");
       }
     } else {
       setProgress(40);
       try {
-        const res = await fetch("https://api.kabox.my.id/api/upload/url", {
+        const res = await fetch(`${API_BASE_URL}/api/upload/url`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: urlInput, expire: expiry })
+          credentials: "include",
+          body: JSON.stringify({ urls: [urlInput], retentionDays: days })
         });
         setProgress(80);
         const data = await res.json();
-        if (res.ok && data.success) {
-          newResults.push({ name: data.metadata?.original_name || "remote_media", url: data.url });
+        if (res.ok && data.success && data.files?.[0]) {
+          newResults.push({ name: data.files[0].originalName || "remote_media", url: data.files[0].url });
           addNotif("Tautan berhasil ditarik");
         } else {
-          throw new Error(data.message || "Peladen menolak tautan");
+          throw new Error(data.error || "Peladen menolak tautan");
         }
       } catch (err) {
-        addNotif(err.message, "error");
+        addNotif(err instanceof Error ? err.message : "Upload URL gagal", "error");
       }
       setProgress(100);
     }
@@ -201,8 +211,8 @@ export default function UploadBox() {
               <span className="text-[10px] font-bold text-white/50 truncate uppercase tracking-widest w-full">{res.name}</span>
               <div className="flex items-center gap-2 w-full">
                 <div className="flex-1 bg-[#121212] border border-white/5 rounded-lg px-3 py-2.5 text-[10px] font-mono text-white/70 truncate select-all">{res.url}</div>
-                <button onClick={() => copy(res.url)} className="p-2.5 bg-[#161616] hover:bg-white/10 rounded-lg transition-colors border border-white/5 shrink-0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg></button>
-                <a href={res.url} target="_blank" className="p-2.5 bg-[#161616] hover:bg-white/10 rounded-lg transition-colors border border-white/5 shrink-0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg></a>
+                <button onClick={() => copy(res.url)} className="p-2.5 bg-[#161616] hover:bg-white/10 rounded-lg transition-colors border border-white/5 shrink-0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg></button>
+                <a href={res.url} target="_blank" rel="noreferrer" className="p-2.5 bg-[#161616] hover:bg-white/10 rounded-lg transition-colors border border-white/5 shrink-0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg></a>
               </div>
             </motion.div>
           ))}

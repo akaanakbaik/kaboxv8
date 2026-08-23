@@ -19,26 +19,18 @@ export default function ApiDocs() {
     {
       title: "Unggah Media Lokal",
       method: "POST",
-      path: "/api/upload",
-      desc: "Mengunggah berkas fisik secara multi-part form data.",
-      curl: "curl -X POST https://api.kabox.my.id/api/upload \\\n  -H 'x-expire: 1d' \\\n  -F 'file=@gambar.jpg'",
-      output: '{\n  "success": true,\n  "metadata": {\n    "original_name": "gambar.jpg",\n    "size_formatted": "0.10 MB"\n  },\n  "url": "https://api.kabox.my.id/file/xyz.jpg"\n}'
+      path: "/api/upload/file",
+      desc: "Mengunggah hingga 5 berkas media melalui multipart/form-data. Maksimal 30MB per berkas.",
+      curl: "curl -X POST https://kabox-api.akadev.me/api/upload/file \\\n  -H 'Expect:' \\\n  -F 'files=@gambar.jpg' \\\n  -F 'retentionDays=1'",
+      output: '{\n  "success": true,\n  "files": [{\n    "originalName": "gambar.jpg",\n    "url": "https://kabox-api.akadev.me/files/xyz.jpg",\n    "mime": "image/jpeg",\n    "size": 284392,\n    "expiresAt": "2026-08-24T00:00:00.000Z"\n  }]\n}'
     },
     {
       title: "Unggah via Tautan (URL)",
       method: "POST",
       path: "/api/upload/url",
-      desc: "Menarik media dari tautan eksternal ke peladen lokal.",
-      curl: "curl -X POST https://api.kabox.my.id/api/upload/url \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"url\": \"https://contoh.com/video.mp4\", \"expire\": \"1h\"}'",
-      output: '{\n  "success": true,\n  "metadata": {\n    "source_url": "https://contoh.com/video.mp4",\n    "size_formatted": "5.00 MB"\n  },\n  "url": "https://api.kabox.my.id/file/uvw.mp4"\n}'
-    },
-    {
-      title: "Telemetri Sistem",
-      method: "GET",
-      path: "/api/health",
-      desc: "Melihat status peladen, RAM, dan laporan keamanan langsung.",
-      curl: "curl -s https://api.kabox.my.id/api/health",
-      output: '{\n  "status": "operational",\n  "storage": {\n    "total_size_db": "1.24 GB"\n  },\n  "memory_diagnostics": {\n    "used_percentage": "14.20%"\n  }\n}'
+      desc: "Menarik hingga 5 media dari URL CDN publik dengan ekstensi media yang jelas.",
+      curl: "curl -X POST https://kabox-api.akadev.me/api/upload/url \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"urls\": [\"https://contoh.com/video.mp4\"], \"retentionDays\": 1}'",
+      output: '{\n  "success": true,\n  "files": [{\n    "originalName": "video.mp4",\n    "url": "https://kabox-api.akadev.me/files/uvw.mp4",\n    "mime": "video/mp4",\n    "size": 5242880,\n    "expiresAt": "2026-08-24T00:00:00.000Z"\n  }]\n}'
     }
   ];
 
