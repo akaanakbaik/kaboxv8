@@ -439,3 +439,21 @@
     transition-duration: 1ms;
   }
 }
+
+
+@media (hover: none) {
+  .haptic-press {
+    will-change: transform;
+    touch-action: manipulation;
+  }
+
+  .haptic-press:active {
+    animation: micro-shake 140ms ease-out;
+  }
+}
+
+@keyframes micro-shake {
+  0%, 100% { transform: scale(1); }
+  35% { transform: scale(0.975) translateX(-1px); }
+  70% { transform: scale(0.985) translateX(1px); }
+}

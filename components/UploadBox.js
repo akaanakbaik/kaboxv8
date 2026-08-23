@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { triggerHaptic } from "@/lib/haptics";
 
 const expiryOptions = [
   { label: "10 Menit", value: "10m" },
@@ -36,6 +37,7 @@ export default function UploadBox() {
   const switchAudioContextRef = useRef(null);
 
   const addNotif = (msg, type = "success") => {
+    triggerHaptic(type === "error" ? "error" : "success");
     const id = Math.random().toString(36).substring(2, 9);
     setNotifications(p => [{ id, msg, type }, ...p]);
     setTimeout(() => setNotifications(p => p.filter(n => n.id !== id)), 4000);
@@ -68,6 +70,7 @@ export default function UploadBox() {
   const switchTab = (mode) => {
     if (isUploading || activeTab === mode) return;
     setActiveTab(mode);
+    triggerHaptic("tap");
     playSwitchSound(mode);
   };
 
@@ -91,12 +94,19 @@ export default function UploadBox() {
     e.target.value = "";
   };
 
-  const removeFile = (idx) => setFiles(files.filter((_, i) => i !== idx));
+  const removeFile = (idx) => {
+    triggerHaptic("tap");
+    setFiles(files.filter((_, i) => i !== idx));
+  };
   const addUrlInput = () => {
     if (urlInputs.length >= MAX_FILES) return addNotif("Maksimal 5 tautan", "error");
+    triggerHaptic("tap");
     setUrlInputs(p => [...p, ""]);
   };
-  const removeUrlInput = (idx) => setUrlInputs(p => p.length === 1 ? [""] : p.filter((_, i) => i !== idx));
+  const removeUrlInput = (idx) => {
+    triggerHaptic("tap");
+    setUrlInputs(p => p.length === 1 ? [""] : p.filter((_, i) => i !== idx));
+  };
 
   const startUpload = async () => {
     if (activeTab === "local" && files.length === 0) return addNotif("Pilih media dahulu", "error");
@@ -104,6 +114,7 @@ export default function UploadBox() {
     if (activeTab === "url" && urls.some(url => !url)) return addNotif("Lengkapi semua kolom tautan", "error");
     if (activeTab === "url" && urls.length === 0) return addNotif("Masukkan tautan valid", "error");
 
+    triggerHaptic("confirm");
     setIsUploading(true);
     setProgress(0);
     const newResults = [];
@@ -191,11 +202,11 @@ export default function UploadBox() {
       <div className="w-full bg-[#0a0a0a]/60 backdrop-blur-2xl border border-white/5 rounded-[2rem] p-4 md:p-6 shadow-2xl overflow-hidden">
         <div className="kabox-mode-switch mb-5" data-mode={activeTab} role="tablist" aria-label="Mode unggah">
           <div className={`kabox-mode-switch-thumb ${activeTab === "url" ? "kabox-mode-switch-thumb-url" : ""}`} aria-hidden="true" />
-          <button type="button" role="tab" aria-selected={activeTab === "local"} data-active={activeTab === "local"} onClick={() => switchTab("local")} className="kabox-mode-switch-option" disabled={isUploading}>
+          <button type="button" role="tab" aria-selected={activeTab === "local"} data-active={activeTab === "local"} onClick={() => switchTab("local")} className="kabox-mode-switch-option haptic-press" disabled={isUploading}>
             <span className="kabox-mode-switch-dot" aria-hidden="true" />
             <span className="kabox-mode-switch-label">Lokal</span>
           </button>
-          <button type="button" role="tab" aria-selected={activeTab === "url"} data-active={activeTab === "url"} onClick={() => switchTab("url")} className="kabox-mode-switch-option" disabled={isUploading}>
+          <button type="button" role="tab" aria-selected={activeTab === "url"} data-active={activeTab === "url"} onClick={() => switchTab("url")} className="kabox-mode-switch-option haptic-press" disabled={isUploading}>
             <span className="kabox-mode-switch-dot" aria-hidden="true" />
             <span className="kabox-mode-switch-label">Tautan URL</span>
           </button>
@@ -205,7 +216,7 @@ export default function UploadBox() {
           {activeTab === "local" ? (
             <motion.div key="local" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
               <div onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }} onDragLeave={() => setIsDragging(false)} onDrop={handleDrop} className={`relative group border border-dashed rounded-[1.5rem] p-8 md:p-10 flex flex-col items-center justify-center transition-all ${isDragging ? "border-white/50 bg-white/5" : "border-white/10 bg-[#121212]/50 hover:border-white/20 hover:bg-white/[0.02]"}`}>
-                <button onClick={() => fileInputRef.current.click()} disabled={isUploading} className="relative z-10 bg-white text-black px-6 py-3 rounded-xl font-black text-[10px] md:text-xs uppercase tracking-widest shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:scale-105 transition-transform disabled:opacity-50 disabled:hover:scale-100">Telusuri Media</button>
+                <button onPointerDown={() => triggerHaptic("tap")} onClick={() => fileInputRef.current.click()} disabled={isUploading} className="relative z-10 bg-white text-black px-6 py-3 rounded-xl font-black text-[10px] md:text-xs uppercase tracking-widest shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:scale-105 transition-transform disabled:opacity-50 disabled:hover:scale-100">Telusuri Media</button>
                 <p className="mt-4 text-[9px] md:text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] text-center">Maksimal 5 Berkas • Seret & Lepas</p>
                 <input type="file" multiple accept={ACCEPTED_MEDIA} ref={fileInputRef} onChange={handleFileSelect} className="hidden" disabled={isUploading} />
               </div>
@@ -215,7 +226,7 @@ export default function UploadBox() {
                   {files.map((f, i) => (
                     <div key={i} className="flex items-center justify-between bg-[#161616] px-4 py-3 rounded-xl border border-white/5">
                       <span className="text-[10px] md:text-xs truncate w-4/5 font-medium text-white/70">{f.name}</span>
-                      <button onClick={() => removeFile(i)} className="text-red-400 hover:text-red-300 transition-colors p-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+                      <button onPointerDown={() => triggerHaptic("tap")} onClick={() => removeFile(i)} className="haptic-press text-red-400 hover:text-red-300 transition-colors p-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
                     </div>
                   ))}
                 </div>
@@ -226,10 +237,10 @@ export default function UploadBox() {
               {urlInputs.map((url, index) => (
                 <div className="relative flex items-center gap-2" key={index}>
                   <input type="url" value={url} onChange={(e) => setUrlInputs(p => p.map((item, i) => i === index ? e.target.value : item))} disabled={isUploading} placeholder="https://contoh.com/media.mp4" className="w-full bg-[#121212] border border-white/10 rounded-[1.5rem] px-5 py-4 text-[10px] md:text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-white/30 focus:bg-white/5 transition-all" />
-                  {urlInputs.length > 1 && <button onClick={() => removeUrlInput(index)} disabled={isUploading} className="shrink-0 text-red-400 hover:text-red-300 transition-colors p-2" aria-label="Hapus tautan">×</button>}
+                  {urlInputs.length > 1 && <button onPointerDown={() => triggerHaptic("tap")} onClick={() => removeUrlInput(index)} disabled={isUploading} className="shrink-0 text-red-400 hover:text-red-300 transition-colors p-2" aria-label="Hapus tautan">×</button>}
                 </div>
               ))}
-              <button onClick={addUrlInput} disabled={isUploading || urlInputs.length >= MAX_FILES} className="self-start text-[9px] md:text-[10px] font-bold text-white/40 hover:text-white transition-colors uppercase tracking-widest disabled:opacity-30">+ Tambah tautan</button>
+              <button onPointerDown={() => triggerHaptic("tap")} onClick={addUrlInput} disabled={isUploading || urlInputs.length >= MAX_FILES} className="self-start text-[9px] md:text-[10px] font-bold text-white/40 hover:text-white transition-colors uppercase tracking-widest disabled:opacity-30">+ Tambah tautan</button>
               <p className="text-[9px] font-medium text-white/30 uppercase tracking-widest text-center mt-2">Peladen akan menarik media secara langsung</p>
             </motion.div>
           )}
@@ -237,7 +248,7 @@ export default function UploadBox() {
 
         <div className="mt-5 flex gap-3">
           <div className="relative w-1/3">
-            <button onClick={() => !isUploading && setIsSelectOpen(!isSelectOpen)} disabled={isUploading} className="w-full bg-[#161616] border border-white/10 rounded-xl py-3 px-4 text-[9px] md:text-[10px] font-bold uppercase tracking-widest flex justify-between items-center hover:bg-white/5 transition-all">
+            <button onPointerDown={() => triggerHaptic("tap")} onClick={() => !isUploading && setIsSelectOpen(!isSelectOpen)} disabled={isUploading} className="haptic-press w-full bg-[#161616] border border-white/10 rounded-xl py-3 px-4 text-[9px] md:text-[10px] font-bold uppercase tracking-widest flex justify-between items-center hover:bg-white/5 transition-all">
               <span className="truncate">{expiryOptions.find(o => o.value === expiry).label}</span>
               <svg className={`w-3 h-3 ml-2 shrink-0 transition-transform ${isSelectOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" /></svg>
             </button>
@@ -245,14 +256,14 @@ export default function UploadBox() {
               {isSelectOpen && (
                 <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }} className="absolute bottom-full left-0 w-full mb-2 bg-[#121212] border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50">
                   {expiryOptions.map(opt => (
-                    <button key={opt.value} onClick={() => { setExpiry(opt.value); setIsSelectOpen(false); }} className="w-full text-left px-4 py-3 text-[9px] md:text-[10px] font-bold text-white/70 hover:bg-white/10 hover:text-white transition-colors border-b border-white/5 last:border-0">{opt.label}</button>
+                    <button key={opt.value} onPointerDown={() => triggerHaptic("tap")} onClick={() => { setExpiry(opt.value); setIsSelectOpen(false); }} className="haptic-press w-full text-left px-4 py-3 text-[9px] md:text-[10px] font-bold text-white/70 hover:bg-white/10 hover:text-white transition-colors border-b border-white/5 last:border-0">{opt.label}</button>
                   ))}
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
-          <button onClick={startUpload} disabled={(activeTab === "local" && files.length === 0) || (activeTab === "url" && (urlInputs.length === 0 || urlInputs.some(url => !url.trim()))) || isUploading} className={`w-2/3 py-3 rounded-xl font-black text-[10px] md:text-xs uppercase tracking-widest transition-all overflow-hidden relative ${((activeTab === "local" && files.length === 0) || (activeTab === "url" && (urlInputs.length === 0 || urlInputs.some(url => !url.trim()))) || isUploading) ? "bg-[#161616] text-white/20" : "bg-white text-black hover:opacity-90 active:scale-[0.98]"}`}>
+          <button onPointerDown={() => triggerHaptic("confirm")} onClick={startUpload} disabled={(activeTab === "local" && files.length === 0) || (activeTab === "url" && (urlInputs.length === 0 || urlInputs.some(url => !url.trim()))) || isUploading} className={`haptic-press w-2/3 py-3 rounded-xl font-black text-[10px] md:text-xs uppercase tracking-widest transition-all overflow-hidden relative ${((activeTab === "local" && files.length === 0) || (activeTab === "url" && (urlInputs.length === 0 || urlInputs.some(url => !url.trim()))) || isUploading) ? "bg-[#161616] text-white/20" : "bg-white text-black hover:opacity-90 active:scale-[0.98]"}`}>
             {isUploading ? (
               <span className="relative z-10 text-white mix-blend-difference">{progress}% Memproses</span>
             ) : "Mulai Unggah"}
@@ -268,7 +279,7 @@ export default function UploadBox() {
               <span className="text-[10px] font-bold text-white/50 truncate uppercase tracking-widest w-full">{res.name}</span>
               <div className="flex items-center gap-2 w-full">
                 <div className="flex-1 bg-[#121212] border border-white/5 rounded-lg px-3 py-2.5 text-[10px] font-mono text-white/70 truncate select-all">{res.url}</div>
-                <button onClick={() => copy(res.url)} className="p-2.5 bg-[#161616] hover:bg-white/10 rounded-lg transition-colors border border-white/5 shrink-0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg></button>
+                <button onPointerDown={() => triggerHaptic("tap")} onClick={() => copy(res.url)} className="haptic-press p-2.5 bg-[#161616] hover:bg-white/10 rounded-lg transition-colors border border-white/5 shrink-0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg></button>
                 <a href={res.url} target="_blank" rel="noreferrer" className="p-2.5 bg-[#161616] hover:bg-white/10 rounded-lg transition-colors border border-white/5 shrink-0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg></a>
               </div>
             </motion.div>
