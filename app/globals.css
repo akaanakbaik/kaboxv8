@@ -392,8 +392,16 @@
 }
 
 .kabox-mode-switch[data-interacting="true"] .kabox-mode-switch-glass-label {
-  transform: translate3d(var(--switch-liquid-glint, 0%), 0, 0) scale(var(--switch-liquid-label-scale, 1.04));
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.34)) drop-shadow(0 0 9px rgba(255, 255, 255, 0.24));
+  transform: translate3d(var(--switch-liquid-glint, 0%), 0, 0) scale(var(--switch-liquid-label-scale, 1.08));
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.34)) drop-shadow(0 0 12px rgba(255, 255, 255, 0.34));
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.42), 0 0 15px rgba(255, 255, 255, 0.34);
+}
+
+.kabox-mode-switch[data-interacting="true"] .kabox-mode-switch-option[data-active="true"] .kabox-mode-switch-label {
+  opacity: 0.56;
+  filter: blur(var(--switch-liquid-label-blur, 0.45px));
+  transform: scale(1.035);
+  text-shadow: 0 0 13px rgba(255, 255, 255, 0.28);
 }
 
 .kabox-mode-switch[data-interacting="true"] .kabox-mode-switch-glass-edge {

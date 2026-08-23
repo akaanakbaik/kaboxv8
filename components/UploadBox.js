@@ -119,10 +119,11 @@ export default function UploadBox() {
     const specular = 0.68 + stretch * 1.05 + edgePressure * 0.54;
     const flow = clamp(signedTravel * 135 + velocity * 18, -100, 100);
     const glint = clamp(-flow * 0.18, -18, 18);
-    const labelScale = clamp(1 + stretch * 0.16 + edgePressure * 0.035, 1, 1.08);
-    const edgeBlur = clamp(edgePressure * 1.35 + stretch * 0.35, 0, 2.2);
+    const labelScale = clamp(1.025 + stretch * 0.32 + edgePressure * 0.11, 1.025, 1.18);
+    const labelBlur = clamp(edgePressure * 0.72 + stretch * 0.08, 0, 0.85);
+    const edgeBlur = clamp(edgePressure * 1.65 + stretch * 0.48, 0, 2.8);
     const edgeOpacity = clamp(0.42 + edgePressure * 0.35 + stretch * 0.12, 0.42, 0.86);
-    switchVisualRef.current = { rawProgress, boundedProgress, startProgress, edgeDistance, shift, scaleX, scaleY, rotation, skew, radius, glow, specular, flow, glint, labelScale, edgeBlur, edgeOpacity };
+    switchVisualRef.current = { rawProgress, boundedProgress, startProgress, edgeDistance, shift, scaleX, scaleY, rotation, skew, radius, glow, specular, flow, glint, labelScale, labelBlur, edgeBlur, edgeOpacity };
     if (switchFrameRef.current) return;
     switchFrameRef.current = requestAnimationFrame(() => {
       const visual = switchVisualRef.current;
@@ -141,6 +142,7 @@ export default function UploadBox() {
         thumb.style.setProperty("--switch-liquid-label-scale", visual.labelScale.toFixed(3));
         thumb.style.setProperty("--switch-liquid-edge-blur", `${visual.edgeBlur.toFixed(2)}px`);
         thumb.style.setProperty("--switch-liquid-edge-opacity", visual.edgeOpacity.toFixed(3));
+        switchRef.current?.style.setProperty("--switch-liquid-label-blur", `${visual.labelBlur.toFixed(2)}px`);
       }
       switchFrameRef.current = null;
     });
@@ -150,6 +152,7 @@ export default function UploadBox() {
     const elements = getSwitchElements();
     if (!elements) return;
     ["--switch-drag-x", "--switch-liquid-scale-x", "--switch-liquid-scale-y", "--switch-liquid-rotate", "--switch-liquid-skew", "--switch-liquid-radius", "--switch-liquid-glow", "--switch-liquid-specular", "--switch-liquid-flow", "--switch-liquid-glint", "--switch-liquid-label-scale", "--switch-liquid-edge-blur", "--switch-liquid-edge-opacity"].forEach(property => elements.thumb.style.removeProperty(property));
+    elements.shell.style.removeProperty("--switch-liquid-label-blur");
     switchVisualRef.current = null;
   };
 
