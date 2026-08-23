@@ -498,3 +498,11 @@
     transition-duration: 1ms;
   }
 }
+
+.kabox-mode-switch {
+  touch-action: none;
+}
+
+.kabox-mode-switch .haptic-press {
+  touch-action: none;
+}

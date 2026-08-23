@@ -103,7 +103,11 @@ export default function UploadBox() {
       width: Math.max(bounds.width, 1),
       dragging: false
     };
-    event.currentTarget.setPointerCapture?.(event.pointerId);
+    try {
+      event.currentTarget.setPointerCapture?.(event.pointerId);
+    } catch {
+      switchPointerRef.current.pointerId = event.pointerId;
+    }
     clearSwitchPressTimer();
     switchPressTimerRef.current = window.setTimeout(() => {
       switchPointerRef.current.dragging = true;
@@ -143,7 +147,11 @@ export default function UploadBox() {
         suppressSwitchClickRef.current = false;
       }, 0);
     }
-    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    try {
+      event.currentTarget.releasePointerCapture?.(event.pointerId);
+    } catch {
+      switchPointerRef.current.pointerId = null;
+    }
     switchPointerRef.current = { pointerId: null, startX: 0, startProgress: 0, progress: 0, width: 1, dragging: false };
   };
 
