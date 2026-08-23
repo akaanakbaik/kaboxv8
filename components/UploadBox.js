@@ -3,10 +3,11 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const expiryOptions = [
-  { label: "10 Menit", value: "10m" },
-  { label: "1 Jam", value: "1h" },
-  { label: "1 Hari", value: "1d" },
-  { label: "1 Minggu", value: "1w" },
+  { label: "10 Menit", value: "10minute" },
+  { label: "1 Jam", value: "1hour" },
+  { label: "1 Hari", value: "1day" },
+  { label: "1 Minggu", value: "1week" },
+  { label: "1 Bulan", value: "1month" },
   { label: "Selamanya", value: "never" }
 ];
 
@@ -15,18 +16,12 @@ const MAX_FILE_SIZE = 30 * 1024 * 1024;
 const MAX_FILES = 5;
 const ACCEPTED_MEDIA = "image/jpeg,image/png,image/gif,image/webp,image/avif,video/mp4,video/x-m4v,video/quicktime,video/webm,video/x-matroska,audio/mpeg,audio/mp4,audio/wav,audio/flac,audio/ogg";
 
-function retentionDays(value) {
-  if (value === "1w") return 7;
-  if (value === "never") return 30;
-  return 1;
-}
-
 export default function UploadBox() {
   const [activeTab, setActiveTab] = useState("local");
   const [files, setFiles] = useState([]);
   const [urlInputs, setUrlInputs] = useState([""]);
   const [isDragging, setIsDragging] = useState(false);
-  const [expiry, setExpiry] = useState("1d");
+  const [expiry, setExpiry] = useState("1day");
   const [isSelectOpen, setIsSelectOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -285,13 +280,11 @@ export default function UploadBox() {
     setIsUploading(true);
     setProgress(0);
     const newResults = [];
-    const days = retentionDays(expiry);
-
     if (activeTab === "local") {
       try {
         const formData = new FormData();
         files.forEach(file => formData.append("files", file));
-        formData.append("retentionDays", String(days));
+        formData.append("exp", expiry);
         const data = await new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
           xhr.withCredentials = true;
@@ -325,7 +318,7 @@ export default function UploadBox() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ urls, retentionDays: days })
+              body: JSON.stringify({ urls, exp: expiry })
         });
         setProgress(80);
         const data = await res.json();
@@ -424,7 +417,7 @@ export default function UploadBox() {
 
         <div className="mt-5 flex gap-3">
           <div className="relative w-1/3">
-            <button onClick={() => !isUploading && setIsSelectOpen(!isSelectOpen)} disabled={isUploading} className="w-full bg-[#161616] border border-white/10 rounded-xl py-3 px-4 text-[9px] md:text-[10px] font-bold uppercase tracking-widest flex justify-between items-center hover:bg-white/5 transition-all">
+            <button onClick={() => !isUploading && setIsSelectOpen(!isSelectOpen)} disabled={isUploading} className="w-full bg-[#161616] border border-white/10 rounded-xl py-3 px-4 text-[9px] md:text-[10px] font-bold uppercase tracking-widest flex justify-between items-center hover:bg-white/5 transition-all" aria-label={`Masa simpan ${expiry}`}>
               <span className="truncate">{expiryOptions.find(o => o.value === expiry).label}</span>
               <svg className={`w-3 h-3 ml-2 shrink-0 transition-transform ${isSelectOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" /></svg>
             </button>
@@ -446,6 +439,7 @@ export default function UploadBox() {
             {isUploading && <motion.div className="absolute top-0 left-0 h-full bg-white/20" initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ ease: "linear", duration: 0.2 }} />}
           </button>
         </div>
+        <p className="mt-3 text-center text-[8px] md:text-[9px] font-medium uppercase tracking-[0.16em] text-white/25">Default web: <span className="text-white/45">exp=1day</span> · Aktif: <span className="text-white/45">exp={expiry}</span></p>
       </div>
 
       <div className="w-full mt-6 space-y-3">
