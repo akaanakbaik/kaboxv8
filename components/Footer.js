@@ -5,7 +5,7 @@ export default function Footer() {
     <footer className="w-full relative z-10 py-6 mt-auto border-t border-white/5 flex flex-col items-center justify-center gap-2 text-[10px] md:text-xs text-white/40 bg-[#050505]">
       <div className="flex items-center gap-1.5 font-medium">
         <span>created by</span>
-        <Link href="https://akadev.me" target="_blank" className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-rose-400 hover:opacity-80 transition-opacity">aka</Link>
+        <Link href="https://akaa.dev" target="_blank" className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-rose-400 hover:opacity-80 transition-opacity">aka</Link>
       </div>
       <div className="flex gap-4 mt-2">
         <Link href="https://t.me/akamodebaik" target="_blank" rel="noopener noreferrer" aria-label="Telegram Kabox" className="kabox-social-glass">

@@ -21,16 +21,16 @@ export default function ApiDocs() {
       method: "POST",
       path: "/api/upload/file",
       desc: "Mengunggah hingga 5 berkas media melalui multipart/form-data. Maksimal 30MB per berkas. ID media berupa token unik 7 karakter. Masa simpan default exp=1day.",
-      curl: "curl -X POST https://kabox.akadev.me/api/upload/file \\\n  -H 'Expect:' \\\n  -F 'files=@gambar.jpg' \\\n  -F 'exp=1day'",
-      output: '{\n  "success": true,\n  "files": [{\n    "originalName": "gambar.jpg",\n    "url": "https://kabox.akadev.me/files/a1b2c3_.jpg",\n    "mime": "image/jpeg",\n    "size": 284392,\n    "expiresAt": "2026-08-24T00:00:00.000Z"\n  }]\n}'
+      curl: "curl -X POST https://kabox.akaa.dev/api/upload/file \\\n  -H 'Expect:' \\\n  -F 'files=@gambar.jpg' \\\n  -F 'exp=1day'",
+      output: '{\n  "success": true,\n  "files": [{\n    "originalName": "gambar.jpg",\n    "url": "https://kabox.akaa.dev/files/a1b2c3_.jpg",\n    "mime": "image/jpeg",\n    "size": 284392,\n    "expiresAt": "2026-08-24T00:00:00.000Z"\n  }]\n}'
     },
     {
       title: "Unggah via Tautan (URL)",
       method: "POST",
       path: "/api/upload/url",
       desc: "Menarik hingga 5 media dari URL CDN publik dengan ekstensi media yang jelas. Masa simpan default exp=1day.",
-      curl: "curl -X POST https://kabox.akadev.me/api/upload/url \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"urls\": [\"https://contoh.com/video.mp4\"], \"exp\": \"1day\"}'",
-      output: '{\n  "success": true,\n  "files": [{\n    "originalName": "video.mp4",\n    "url": "https://kabox.akadev.me/files/m4n5o6-.mp4",\n    "mime": "video/mp4",\n    "size": 5242880,\n    "expiresAt": "2026-08-24T00:00:00.000Z"\n  }]\n}'
+      curl: "curl -X POST https://kabox.akaa.dev/api/upload/url \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"urls\": [\"https://contoh.com/video.mp4\"], \"exp\": \"1day\"}'",
+      output: '{\n  "success": true,\n  "files": [{\n    "originalName": "video.mp4",\n    "url": "https://kabox.akaa.dev/files/m4n5o6-.mp4",\n    "mime": "video/mp4",\n    "size": 5242880,\n    "expiresAt": "2026-08-24T00:00:00.000Z"\n  }]\n}'
     }
   ];
 
