@@ -22,15 +22,15 @@ export default function ApiDocs() {
       path: "/api/upload/file",
       desc: "Mengunggah hingga 5 berkas media melalui multipart/form-data. Maksimal 30MB per berkas. ID media berupa token unik 7 karakter. Masa simpan default exp=1day.",
       curl: "curl -X POST https://kabox.akaa.dev/api/upload/file \\\n  -H 'Expect:' \\\n  -F 'files=@gambar.jpg' \\\n  -F 'exp=1day'",
-      output: '{\n  "success": true,\n  "files": [{\n    "originalName": "gambar.jpg",\n    "url": "https://kabox.akaa.dev/files/a1b2c3_.jpg",\n    "mime": "image/jpeg",\n    "size": 284392,\n    "expiresAt": "2026-08-24T00:00:00.000Z"\n  }]\n}'
+      output: '{\n  "success": true,\n  "files": [{\n    "id": "a1b2c3_",\n    "name": "a1b2c3_.jpg",\n    "originalName": "gambar.jpg",\n    "url": "https://kabox.akaa.dev/files/a1b2c3_.jpg",\n    "mime": "image/jpeg",\n    "size": 284392,\n    "expiresAt": "2026-10-24T00:00:00.000Z"\n  }]\n}'
     },
     {
       title: "Unggah via Tautan (URL)",
       method: "POST",
       path: "/api/upload/url",
-      desc: "Menarik hingga 5 media dari URL CDN publik dengan ekstensi media yang jelas. Masa simpan default exp=1day.",
+      desc: "Menarik hingga 5 media dari URL CDN publik dengan ekstensi media yang jelas. Masa simpan default exp=1day. Format didukung: jpg, png, gif, webp, avif, mp4, mov, webm, mkv, mp3, m4a, wav, flac, ogg.",
       curl: "curl -X POST https://kabox.akaa.dev/api/upload/url \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"urls\": [\"https://contoh.com/video.mp4\"], \"exp\": \"1day\"}'",
-      output: '{\n  "success": true,\n  "files": [{\n    "originalName": "video.mp4",\n    "url": "https://kabox.akaa.dev/files/m4n5o6-.mp4",\n    "mime": "video/mp4",\n    "size": 5242880,\n    "expiresAt": "2026-08-24T00:00:00.000Z"\n  }]\n}'
+      output: '{\n  "success": true,\n  "files": [{\n    "id": "m4n5o6-",\n    "name": "m4n5o6-.mp4",\n    "originalName": "video.mp4",\n    "url": "https://kabox.akaa.dev/files/m4n5o6-.mp4",\n    "mime": "video/mp4",\n    "size": 5242880,\n    "expiresAt": "2026-10-24T00:00:00.000Z"\n  }]\n}'
     }
   ];
 
@@ -46,8 +46,7 @@ export default function ApiDocs() {
       </AnimatePresence>
 
       <div className="text-center mb-8 md:mb-12 w-full max-w-2xl">
-        <h1 className="text-2xl md:text-3xl font-black mb-3 tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-white/50">API Terbuka</h1>
-        <p className="text-white/40 text-[10px] md:text-xs leading-relaxed max-w-md mx-auto">Integrasi canggih, minim penundaan. Otomatisasi pangkalan data aplikasi Anda dengan Kabox REST API.</p>
+        <h1 className="text-2xl md:text-3xl font-black mb-3 tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-white/50">API Terbuka</h1>          <p className="text-white/40 text-[10px] md:text-xs leading-relaxed max-w-md mx-auto">Integrasi canggih, minim penundaan. Format didukung: jpg, png, gif, webp, avif, mp4, mov, webm, mkv, mp3, m4a, wav, flac, ogg.</p>
       </div>
 
       <div className="w-full max-w-2xl flex flex-col gap-6 pb-10">
