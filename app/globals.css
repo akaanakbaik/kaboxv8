@@ -52,12 +52,12 @@
   min-height: var(--switch-height);
   padding: var(--switch-padding);
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: var(--switch-radius);
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.025) 42%, rgba(0, 0, 0, 0.42));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.11), inset 0 -1px 0 rgba(0, 0, 0, 0.35), 0 12px 28px rgba(0, 0, 0, 0.2), 0 2px 5px rgba(0, 0, 0, 0.24);
-  backdrop-filter: blur(26px) saturate(155%);
-  -webkit-backdrop-filter: blur(26px) saturate(155%);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.03) 42%, rgba(0, 0, 0, 0.44));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 -1px 0 rgba(0, 0, 0, 0.38), 0 12px 28px rgba(0, 0, 0, 0.22), 0 2px 5px rgba(0, 0, 0, 0.26);
+  backdrop-filter: blur(28px) saturate(165%);
+  -webkit-backdrop-filter: blur(28px) saturate(165%);
   transition: border-color 240ms var(--switch-ease), box-shadow 240ms var(--switch-ease), background 240ms var(--switch-ease);
 }
 
@@ -106,12 +106,12 @@
   height: calc(100% - (var(--switch-padding) * 2));
   overflow: hidden;
   pointer-events: none;
-  border: 1px solid rgba(255, 255, 255, 0.32);
+  border: 1px solid rgba(255, 255, 255, 0.42);
   border-radius: calc(var(--switch-radius) - 4px);
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.29), rgba(255, 255, 255, 0.12) 45%, rgba(255, 255, 255, 0.055));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.43), inset 0 -1px 0 rgba(0, 0, 0, 0.22), 0 5px 16px rgba(0, 0, 0, 0.32), 0 1px 3px rgba(0, 0, 0, 0.38);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.14) 45%, rgba(255, 255, 255, 0.06));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.56), inset 0 -1px 0 rgba(0, 0, 0, 0.2), 0 5px 16px rgba(0, 0, 0, 0.32), 0 1px 3px rgba(0, 0, 0, 0.38), inset 0 0 12px rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(22px) saturate(190%) brightness(1.04);
+  -webkit-backdrop-filter: blur(22px) saturate(190%) brightness(1.04);
   transform: translate3d(var(--switch-base-x), 0, 0);
   transition: transform 360ms var(--switch-spring), box-shadow 240ms var(--switch-ease), background 240ms var(--switch-ease);
 }
@@ -138,9 +138,9 @@
   height: 1px;
   content: "";
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.7);
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
-  opacity: 0.7;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95), transparent);
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.4);
+  opacity: 0.85;
 }
 
 
@@ -150,12 +150,12 @@
   z-index: 3;
   inset: -1px;
   pointer-events: none;
-  border: 1px solid rgba(255, 255, 255, 0.24);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: inherit;
-  background: linear-gradient(112deg, rgba(255, 255, 255, 0.18), transparent 30%, transparent 68%, rgba(255, 255, 255, 0.12));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38), inset 0 -1px 0 rgba(0, 0, 0, 0.2), 0 0 12px rgba(255, 255, 255, 0.04);
-  opacity: 0.52;
-  filter: blur(0.65px);
+  background: linear-gradient(112deg, rgba(255, 255, 255, 0.24), transparent 30%, transparent 68%, rgba(255, 255, 255, 0.16));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.46), inset 0 -1px 0 rgba(0, 0, 0, 0.18), 0 0 12px rgba(255, 255, 255, 0.06);
+  opacity: 0.66;
+  filter: blur(0.5px);
   transform: scale(1.008);
   transition: border-radius var(--switch-fluid-duration, 520ms) var(--switch-spring), filter var(--switch-glow-duration, 280ms) var(--switch-ease), opacity var(--switch-glow-duration, 280ms) var(--switch-ease), transform var(--switch-fluid-duration, 520ms) var(--switch-spring);
 }
@@ -181,8 +181,9 @@
 .kabox-mode-switch-lens-content {
   position: absolute;
   inset: 0;
-  backdrop-filter: blur(5px) saturate(165%);
-  -webkit-backdrop-filter: blur(5px) saturate(165%);
+  background: linear-gradient(105deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 42%, rgba(255, 255, 255, 0.05) 78%, rgba(255, 255, 255, 0) 100%);
+  backdrop-filter: blur(7px) saturate(185%) brightness(1.06);
+  -webkit-backdrop-filter: blur(7px) saturate(185%) brightness(1.06);
 }
 
 .kabox-mode-switch-lens-label {
@@ -198,7 +199,7 @@
   line-height: 1;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5), 0 0 18px rgba(255, 255, 255, 0.42);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 255, 255, 0.55);
   opacity: 0;
   transform: scale(1.08);
   transform-origin: 50% 50%;
@@ -324,9 +325,9 @@
 }
 
 .kabox-mode-switch-option[data-active="true"] .kabox-mode-switch-dot {
-  border-color: rgba(255, 255, 255, 0.88);
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08), 0 0 14px rgba(255, 255, 255, 0.55);
+  border-color: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1), 0 0 16px rgba(255, 255, 255, 0.62);
   transform: scale(1.08);
 }
 
