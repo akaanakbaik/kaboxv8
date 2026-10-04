@@ -33,8 +33,12 @@ const FORMAT_GROUPS = [
     items: "txt, md, csv, tsv, json, jsonl, yaml, yml, toml, ini, cfg, env, log, srt, vtt, ass, m3u, ics, vcf, tex, bib, sql",
   },
   {
-    title: "Lainnya",
-    items: "3mf, glb, stl, blend, fbx, skp, psd, sqlite, parquet, avro, pcap, dcm, raw kamera (cr2, cr3, nef, arw, dng, orf, raf, rw2), mifi",
+    title: "Gambar lain",
+    items: "heic, heif, jxl, ktx, pcx, hdr, ico, apng",
+  },
+  {
+    title: "Data & 3D",
+    items: "3mf, glb, stl, blend, fbx, skp, sqlite, parquet, arrow, avro, pcap, dcm, psd, raw kamera (cr2, cr3, nef, arw, dng, orf, raf, rw2)",
   },
 ];
 
@@ -164,6 +168,11 @@ export default function ApiDocs() {
             Konten aktif (HTML/SVG/XML/JS) dan executable tidak pernah dilayani. Nama berkas dengan
             extension ganda seperti <code>payload.html.png</code> juga ditolak. Berkas teks tanpa magic
             bytes hanya diterima bila isinya benar-benar teks murni (tanpa NUL byte, tanpa signature ELF/PE/Mach-O).
+            <br /><br />
+            Beberapa format tidak didukung karena tidak punya signature yang andal sehingga isinya tidak bisa
+            dibuktikan: <code className="text-white/55">tga</code>, <code className="text-white/55">stl</code> biner,
+            dan <code className="text-white/55">key</code> (dipakai juga untuk keychain Apple, jadi diblokir demi
+            keamanan).
           </p>
         </div>
       </section>
