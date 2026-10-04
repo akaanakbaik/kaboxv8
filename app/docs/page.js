@@ -1,6 +1,42 @@
+
 "use client";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+
+const FORMAT_GROUPS = [
+  {
+    title: "Gambar",
+    items: "jpg, jpeg, png, gif, webp, avif, apng, bmp, tiff, ico, heic, jp2, jxl",
+  },
+  {
+    title: "Video",
+    items: "mp4, m4v, mov, webm, mkv, avi, 3gp, mpg, ogv, mts, flv, wmv",
+  },
+  {
+    title: "Audio",
+    items: "mp3, m4a, wav, flac, ogg, oga, opus, aac, aiff, ac3, wma, mid",
+  },
+  {
+    title: "Dokumen",
+    items: "pdf, docx, docm, xlsx, xlsm, pptx, pptm, odt, ods, odp, rtf, epub, pages, numbers",
+  },
+  {
+    title: "Font",
+    items: "ttf, otf, woff, woff2, eot, ttc",
+  },
+  {
+    title: "Arsip",
+    items: "zip, tar, gz, tgz, bz2, xz, zst, 7z, rar",
+  },
+  {
+    title: "Teks & data",
+    items: "txt, md, csv, tsv, json, jsonl, yaml, yml, toml, ini, cfg, env, log, srt, vtt, ass, m3u, ics, vcf, tex, bib, sql",
+  },
+  {
+    title: "Lainnya",
+    items: "3mf, glb, stl, blend, fbx, skp, psd, sqlite, parquet, avro, pcap, dcm, raw kamera (cr2, cr3, nef, arw, dng, orf, raf, rw2), mifi",
+  },
+];
 
 export default function ApiDocs() {
   const [toast, setToast] = useState({ show: false, msg: "" });
@@ -28,7 +64,7 @@ export default function ApiDocs() {
       title: "Unggah via Tautan (URL)",
       method: "POST",
       path: "/api/upload/url",
-      desc: "Menarik hingga 5 media dari URL CDN publik dengan ekstensi media yang jelas. Masa simpan default exp=1day. Format didukung: jpg, png, gif, webp, avif, mp4, mov, webm, mkv, mp3, m4a, wav, flac, ogg.",
+      desc: "Menarik hingga 5 media dari URL CDN publik dengan ekstensi yang jelas. Masa simpan default exp=1day. Format yangditarik sama seperti upload biasa: gambar, video, audio, dokumen, font, arsip, dan berkas teks.",
       curl: "curl -X POST https://kabox.akaa.dev/api/upload/url \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"urls\": [\"https://contoh.com/video.mp4\"], \"exp\": \"1day\"}'",
       output: '{\n  "success": true,\n  "files": [{\n    "id": "m4n5o6-",\n    "name": "m4n5o6-.mp4",\n    "originalName": "video.mp4",\n    "url": "https://kabox.akaa.dev/files/m4n5o6-.mp4",\n    "mime": "video/mp4",\n    "size": 5242880,\n    "expiresAt": "2026-10-24T00:00:00.000Z"\n  }]\n}'
     }
@@ -46,7 +82,7 @@ export default function ApiDocs() {
       </AnimatePresence>
 
       <div className="text-center mb-8 md:mb-12 w-full max-w-2xl">
-        <h1 className="text-2xl md:text-3xl font-black mb-3 tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-white/50">API Terbuka</h1>          <p className="text-white/40 text-[10px] md:text-xs leading-relaxed max-w-md mx-auto">Integrasi canggih, minim penundaan. Format didukung: jpg, png, gif, webp, avif, mp4, mov, webm, mkv, mp3, m4a, wav, flac, ogg.</p>
+        <h1 className="text-2xl md:text-3xl font-black mb-3 tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-white/50">API Terbuka</h1>          <p className="text-white/40 text-[10px] md:text-xs leading-relaxed max-w-md mx-auto">Integrasi canggih, minim penundaan. Semua format aman didukung: gambar, video, audio, dokumen (PDF, Word, Excel, PowerPoint, ODF, EPUB), font, arsip (zip, 7z, rar, tar, gz, bz2, xz), dan berkas teks.</p>
       </div>
 
       <div className="w-full max-w-2xl flex flex-col gap-6 pb-10">
@@ -100,6 +136,36 @@ export default function ApiDocs() {
           ))}
         </div>
         <p className="mt-4 text-[10px] leading-relaxed text-white/35">Gunakan <code>exp</code> pada kedua endpoint. <code>retentionDays</code> masih diterima untuk kompatibilitas client lama dan akan dihapus pada versi mayor berikutnya.</p>
+      </section>
+
+      <section className="w-full max-w-2xl rounded-2xl border border-white/5 bg-[#0a0a0a]/60 p-5 md:p-6 shadow-xl backdrop-blur-xl">
+        <p className="text-[9px] font-bold uppercase tracking-widest text-white/30">Format</p>
+        <h2 className="mt-2 text-sm md:text-base font-bold text-white/90">Format yang didukung</h2>
+        <p className="mt-2 text-[10px] leading-relaxed text-white/35">
+          Setiap file diverifikasi dari isinya (magic bytes), bukan dari nama. Format di luar daftar ini
+          tetap bisa dilayani selama isinya terbukti aman. Batas 30MB per file, maksimal 5 file per request.
+        </p>
+        <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-2">
+          {FORMAT_GROUPS.map((group) => (
+            <div key={group.title} className="rounded-xl border border-white/5 bg-white/[0.025] px-3 py-3">
+              <p className="text-[9px] font-black uppercase tracking-widest text-white/45">{group.title}</p>
+              <p className="mt-1.5 font-mono text-[9px] leading-relaxed text-white/55 break-words">{group.items}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 rounded-xl border border-red-500/20 bg-red-500/[0.04] px-3 py-3">
+          <p className="text-[9px] font-black uppercase tracking-widest text-red-400/70">Selalu ditolak</p>
+          <p className="mt-1.5 font-mono text-[9px] leading-relaxed text-white/45 break-words">
+            html, htm, xhtml, svg, xml, xsl, js, mjs, cjs, ts, wasm, swf, exe, dll, so, dylib, bin, msi,
+            apk, deb, rpm, dmg, jar, class, bat, cmd, ps1, sh, py, rb, pl, php, asp, aspx, jsp, cgi, vbs,
+            reg, lnk, url, crx, xpi, chm, hta, ps, eps
+          </p>
+          <p className="mt-2 text-[9px] leading-relaxed text-white/30">
+            Konten aktif (HTML/SVG/XML/JS) dan executable tidak pernah dilayani. Nama berkas dengan
+            extension ganda seperti <code>payload.html.png</code> juga ditolak. Berkas teks tanpa magic
+            bytes hanya diterima bila isinya benar-benar teks murni (tanpa NUL byte, tanpa signature ELF/PE/Mach-O).
+          </p>
+        </div>
       </section>
     </div>
   );

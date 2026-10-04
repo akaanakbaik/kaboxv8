@@ -14,7 +14,27 @@ const expiryOptions = [
 const API_BASE_URL = (typeof window !== "undefined" && window.location.hostname === "kabox.akaa.dev" ? window.location.origin : process.env.NEXT_PUBLIC_API_BASE_URL || "https://kabox.akaa.dev").replace(/\/$/, "");
 const MAX_FILE_SIZE = 30 * 1024 * 1024;
 const MAX_FILES = 5;
-const ACCEPTED_MEDIA = "image/jpeg,image/png,image/gif,image/webp,image/avif,video/mp4,video/x-m4v,video/quicktime,video/webm,video/x-matroska,audio/mpeg,audio/mp4,audio/wav,audio/flac,audio/ogg";
+// Backend menerima semua format media/dokumen/font/arsip/teks yang terbukti aman
+// dari magic bytes. Daftar di bawah hanya untuk menyaring pilihan di file picker;
+// bukan daftar penolakan — server tetap memvalidasi isi file.
+const ACCEPTED_MEDIA = [
+  // gambar
+  ".jpg,.jpeg,.png,.gif,.webp,.avif,.bmp,.tiff,.tif,.ico,.heic,.heif,.jp2,.jxl",
+  // video
+  ".mp4,.m4v,.mov,.webm,.mkv,.avi,.3gp,.mpg,.mpeg,.ogv,.mts,.flv,.wmv",
+  // audio
+  ".mp3,.m4a,.wav,.flac,.ogg,.oga,.opus,.aac,.aiff,.aif,.ac3,.wma,.mid,.midi",
+  // dokumen (doc/xls/ppt lama & keychain apple memang diblokir backend)
+  ".pdf,.docx,.docm,.xlsx,.xlsm,.pptx,.pptm,.dotx,.dotm,.xltx,.xltm,",
+  ".odt,.ods,.odp,.odg,.odf,.rtf,.epub,.pages,.numbers",
+  // font
+  ".ttf,.otf,.woff,.woff2,.eot,.ttc",
+  // arsip
+  ".zip,.tar,.gz,.tgz,.bz2,.xz,.zst,.7z,.rar",
+  // teks & data
+  ".txt,.md,.markdown,.csv,.tsv,.json,.jsonl,.yaml,.yml,.toml,.ini,.cfg,.conf,.env,.log,",
+  ".srt,.vtt,.ass,.ssa,.m3u,.m3u8,.ics,.vcf,.tex,.bib,.sql,.diff,.patch",
+].join(",");
 
 export default function UploadBox() {
   const [activeTab, setActiveTab] = useState("local");
