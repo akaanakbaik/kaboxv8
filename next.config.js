@@ -1,3 +1,7 @@
+const API_BASE_URL = (
+  process.env.NEXT_PUBLIC_API_BASE_URL || "https://kabox-api.akaa.dev"
+).replace(/\/$/, "");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Static export hanya untuk self-host di VPS; di Vercel pakai build standar.
@@ -14,7 +18,7 @@ if (process.env.VERCEL) {
   nextConfig.rewrites = async () => [
     {
       source: "/files/:path*",
-      destination: "https://kabox-api.akaa.dev/files/:path*",
+      destination: `${API_BASE_URL}/files/:path*`,
     },
   ];
 }

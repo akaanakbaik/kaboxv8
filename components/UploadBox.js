@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { API_BASE_URL } from "@/lib/api";
 
 const expiryOptions = [
   { label: "10 Menit", value: "10minute" },
@@ -11,7 +12,6 @@ const expiryOptions = [
   { label: "Selamanya", value: "never" }
 ];
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://kabox-api.akaa.dev").replace(/\/$/, "");
 const MAX_FILE_SIZE = 30 * 1024 * 1024;
 const MAX_FILES = 5;
 const ACCEPTED_MEDIA = [
