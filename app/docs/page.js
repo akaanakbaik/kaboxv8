@@ -61,16 +61,16 @@ export default function ApiDocs() {
       method: "POST",
       path: "/api/upload/file",
       desc: "Mengunggah hingga 5 berkas media melalui multipart/form-data. Maksimal 30MB per berkas. ID media berupa token unik 7 karakter. Masa simpan default exp=1day.",
-      curl: "curl -X POST https://kabox.akaa.dev/api/upload/file \\\n  -H 'Expect:' \\\n  -F 'files=@gambar.jpg' \\\n  -F 'exp=1day'",
-      output: '{\n  "success": true,\n  "files": [{\n    "id": "a1b2c3_",\n    "name": "a1b2c3_.jpg",\n    "originalName": "gambar.jpg",\n    "url": "https://kabox.akaa.dev/files/a1b2c3_.jpg",\n    "mime": "image/jpeg",\n    "size": 284392,\n    "expiresAt": "2026-10-24T00:00:00.000Z"\n  }]\n}'
+      curl: "curl -X POST https://kabox-api.akaa.dev/api/upload/file \\\n  -H 'Expect:' \\\n  -F 'files=@gambar.jpg' \\\n  -F 'exp=1day'",
+      output: '{\n  "success": true,\n  "files": [{\n    "id": "a1b2c3_",\n    "name": "a1b2c3_.jpg",\n    "originalName": "gambar.jpg",\n    "url": "https://kabox-api.akaa.dev/files/a1b2c3_.jpg",\n    "mime": "image/jpeg",\n    "size": 284392,\n    "expiresAt": "2026-10-24T00:00:00.000Z"\n  }]\n}'
     },
     {
       title: "Unggah via Tautan (URL)",
       method: "POST",
       path: "/api/upload/url",
       desc: "Menarik hingga 5 media dari URL CDN publik dengan ekstensi yang jelas. Masa simpan default exp=1day. Format yangditarik sama seperti upload biasa: gambar, video, audio, dokumen, font, arsip, dan berkas teks.",
-      curl: "curl -X POST https://kabox.akaa.dev/api/upload/url \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"urls\": [\"https://contoh.com/video.mp4\"], \"exp\": \"1day\"}'",
-      output: '{\n  "success": true,\n  "files": [{\n    "id": "m4n5o6-",\n    "name": "m4n5o6-.mp4",\n    "originalName": "video.mp4",\n    "url": "https://kabox.akaa.dev/files/m4n5o6-.mp4",\n    "mime": "video/mp4",\n    "size": 5242880,\n    "expiresAt": "2026-10-24T00:00:00.000Z"\n  }]\n}'
+      curl: "curl -X POST https://kabox-api.akaa.dev/api/upload/url \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"urls\": [\"https://contoh.com/video.mp4\"], \"exp\": \"1day\"}'",
+      output: '{\n  "success": true,\n  "files": [{\n    "id": "m4n5o6-",\n    "name": "m4n5o6-.mp4",\n    "originalName": "video.mp4",\n    "url": "https://kabox-api.akaa.dev/files/m4n5o6-.mp4",\n    "mime": "video/mp4",\n    "size": 5242880,\n    "expiresAt": "2026-10-24T00:00:00.000Z"\n  }]\n}'
     }
   ];
 

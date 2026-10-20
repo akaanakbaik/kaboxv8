@@ -11,7 +11,7 @@ const expiryOptions = [
   { label: "Selamanya", value: "never" }
 ];
 
-const API_BASE_URL = (typeof window !== "undefined" && window.location.hostname === "kabox.akaa.dev" ? window.location.origin : process.env.NEXT_PUBLIC_API_BASE_URL || "https://kabox.akaa.dev").replace(/\/$/, "");
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://kabox-api.akaa.dev").replace(/\/$/, "");
 const MAX_FILE_SIZE = 30 * 1024 * 1024;
 const MAX_FILES = 5;
 const ACCEPTED_MEDIA = [

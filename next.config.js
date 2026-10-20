@@ -8,4 +8,15 @@ const nextConfig = {
   poweredByHeader: false,
 };
 
+// Keep previously shared media links alive after the API moved to its own
+// hostname. Only Vercel can proxy these; the static VPS export has no server.
+if (process.env.VERCEL) {
+  nextConfig.rewrites = async () => [
+    {
+      source: "/files/:path*",
+      destination: "https://kabox-api.akaa.dev/files/:path*",
+    },
+  ];
+}
+
 module.exports = nextConfig;
