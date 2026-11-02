@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, API_REQUEST_BASE, resolveDisplayUrl } from "@/lib/api";
 
 const expiryOptions = [
   { label: "10 Menit", value: "10minute" },
@@ -281,6 +281,50 @@ export default function UploadBox() {
   };
   const removeUrlInput = (idx) => setUrlInputs(p => p.length === 1 ? [""] : p.filter((_, i) => i !== idx));
 
+  const postFile = (base, file, exp, onProgress) => new Promise((resolve, reject) => {
+    const formData = new FormData();
+    formData.append("files", file);
+    formData.append("exp", exp);
+    const xhr = new XMLHttpRequest();
+    xhr.withCredentials = true;
+    xhr.open("POST", `${base}/api/upload/file`, true);
+    xhr.timeout = 5 * 60 * 1000;
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress(e.loaded / e.total);
+    };
+    xhr.onload = () => {
+      let payload;
+      try {
+        payload = JSON.parse(xhr.responseText || "{}");
+      } catch {
+        reject(Object.assign(new Error(xhr.status === 413 ? "Berkas terlalu besar untuk jalur unggah" : `Peladen membalas status ${xhr.status}`), { network: false }));
+        return;
+      }
+      if (xhr.status >= 200 && xhr.status < 300 && payload.success) resolve(payload);
+      else reject(Object.assign(new Error(payload.error || `Peladen membalas status ${xhr.status}`), { network: false }));
+    };
+    xhr.onerror = () => reject(Object.assign(new Error("Koneksi terputus. Periksa jaringan lalu coba lagi."), { network: true }));
+    xhr.ontimeout = () => reject(Object.assign(new Error("Waktu unggah habis. Coba lagi dengan jaringan lebih stabil."), { network: true }));
+    xhr.send(formData);
+  });
+
+  // Coba jalur same-origin lebih dulu (lewat rewrite Vercel), lalu host API
+  // langsung. Fallback hanya untuk kegagalan jaringan, bukan penolakan server.
+  const uploadFileWithFallback = async (file, exp, onProgress) => {
+    const targets = [...new Set([API_REQUEST_BASE, API_BASE_URL])];
+    let lastError;
+    for (let i = 0; i < targets.length; i += 1) {
+      try {
+        return await postFile(targets[i], file, exp, onProgress);
+      } catch (err) {
+        lastError = err;
+        if (!err?.network) throw err;
+        onProgress(0);
+      }
+    }
+    throw lastError;
+  };
+
   const startUpload = async () => {
     if (activeTab === "local" && files.length === 0) return addNotif("Pilih media dahulu", "error");
     const urls = urlInputs.map(url => url.trim());
@@ -299,39 +343,10 @@ export default function UploadBox() {
       for (let index = 0; index < files.length; index += 1) {
         const file = files[index];
         try {
-          const data = await new Promise((resolve, reject) => {
-            const formData = new FormData();
-            formData.append("files", file);
-            formData.append("exp", expiry);
-            const xhr = new XMLHttpRequest();
-            xhr.withCredentials = true;
-            xhr.open("POST", `${API_BASE_URL}/api/upload/file`, true);
-            xhr.timeout = 5 * 60 * 1000;
-            xhr.upload.onprogress = (e) => {
-              if (!e.lengthComputable) return;
-              const filePart = e.loaded / e.total;
-              setProgress(Math.min(99, Math.round(((index + filePart) / files.length) * 100)));
-            };
-            xhr.onload = () => {
-              let payload;
-              try {
-                payload = JSON.parse(xhr.responseText || "{}");
-              } catch {
-                if (xhr.status === 413) {
-                  reject(new Error("Berkas terlalu besar untuk jalur unggah"));
-                  return;
-                }
-                reject(new Error(`Peladen membalas status ${xhr.status}`));
-                return;
-              }
-              if (xhr.status >= 200 && xhr.status < 300 && payload.success) resolve(payload);
-              else reject(new Error(payload.error || `Peladen membalas status ${xhr.status}`));
-            };
-            xhr.onerror = () => reject(new Error("Koneksi terputus. Periksa jaringan lalu coba lagi."));
-            xhr.ontimeout = () => reject(new Error("Waktu unggah habis. Coba lagi dengan jaringan lebih stabil."));
-            xhr.send(formData);
+          const data = await uploadFileWithFallback(file, expiry, (filePart) => {
+            setProgress(Math.min(99, Math.round(((index + filePart) / files.length) * 100)));
           });
-          data.files.forEach((item) => newResults.push({ name: item.originalName || file.name || item.name, url: item.url }));
+          data.files.forEach((item) => newResults.push({ name: item.originalName || file.name || item.name, url: resolveDisplayUrl(item.url) }));
         } catch (err) {
           failed += 1;
           addNotif(`${file.name}: ${err instanceof Error ? err.message : "Upload gagal"}`, "error");
@@ -344,7 +359,7 @@ export default function UploadBox() {
     } else {
       setProgress(40);
       try {
-        const res = await fetch(`${API_BASE_URL}/api/upload/url`, {
+        const res = await fetch(`${API_REQUEST_BASE}/api/upload/url`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -353,7 +368,7 @@ export default function UploadBox() {
         setProgress(80);
         const data = await res.json();
         if (res.ok && data.success && data.files?.length) {
-          data.files.forEach(item => newResults.push({ name: item.originalName || "remote_media", url: item.url }));
+          data.files.forEach(item => newResults.push({ name: item.originalName || "remote_media", url: resolveDisplayUrl(item.url) }));
           addNotif(`${newResults.length} tautan berhasil ditarik`);
         } else {
           throw new Error(data.error || "Peladen menolak tautan");

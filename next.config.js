@@ -17,6 +17,10 @@ const nextConfig = {
 if (process.env.VERCEL) {
   nextConfig.rewrites = async () => [
     {
+      source: "/api/:path*",
+      destination: `${API_BASE_URL}/api/:path*`,
+    },
+    {
       source: "/files/:path*",
       destination: `${API_BASE_URL}/files/:path*`,
     },
