@@ -282,12 +282,23 @@ export default function UploadBox() {
   const removeUrlInput = (idx) => setUrlInputs(p => p.length === 1 ? [""] : p.filter((_, i) => i !== idx));
 
   const postFile = (base, file, exp, onProgress) => new Promise((resolve, reject) => {
+    const endpoint = `${base}/api/upload/file`;
+    const host = base || (typeof window !== "undefined" ? window.location.host : "same-origin");
     const formData = new FormData();
     formData.append("files", file);
     formData.append("exp", exp);
     const xhr = new XMLHttpRequest();
+    const fail = (message, network) => {
+      const error = new Error(message);
+      error.network = network;
+      error.endpoint = endpoint;
+      error.host = host;
+      error.requestId = xhr.getResponseHeader("x-request-id");
+      error.status = xhr.status;
+      reject(error);
+    };
     xhr.withCredentials = true;
-    xhr.open("POST", `${base}/api/upload/file`, true);
+    xhr.open("POST", endpoint, true);
     xhr.timeout = 5 * 60 * 1000;
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) onProgress(e.loaded / e.total);
@@ -297,14 +308,14 @@ export default function UploadBox() {
       try {
         payload = JSON.parse(xhr.responseText || "{}");
       } catch {
-        reject(Object.assign(new Error(xhr.status === 413 ? "Berkas terlalu besar untuk jalur unggah" : `Peladen membalas status ${xhr.status}`), { network: false }));
+        fail(xhr.status === 413 ? "Berkas terlalu besar untuk jalur unggah" : `Peladen membalas status ${xhr.status}`, false);
         return;
       }
       if (xhr.status >= 200 && xhr.status < 300 && payload.success) resolve(payload);
-      else reject(Object.assign(new Error(payload.error || `Peladen membalas status ${xhr.status}`), { network: false }));
+      else fail(payload.error || `Peladen membalas status ${xhr.status}`, false);
     };
-    xhr.onerror = () => reject(Object.assign(new Error("Koneksi terputus. Periksa jaringan lalu coba lagi."), { network: true }));
-    xhr.ontimeout = () => reject(Object.assign(new Error("Waktu unggah habis. Coba lagi dengan jaringan lebih stabil."), { network: true }));
+    xhr.onerror = () => fail(`Koneksi ke ${host} terputus sebelum peladen menjawab`, true);
+    xhr.ontimeout = () => fail(`Waktu unggah ke ${host} habis. Coba lagi dengan jaringan lebih stabil.`, true);
     xhr.send(formData);
   });
 
@@ -312,16 +323,23 @@ export default function UploadBox() {
   // langsung. Fallback hanya untuk kegagalan jaringan, bukan penolakan server.
   const uploadFileWithFallback = async (file, exp, onProgress) => {
     const targets = [...new Set([API_REQUEST_BASE, API_BASE_URL])];
+    const attempts = [];
     let lastError;
     for (let i = 0; i < targets.length; i += 1) {
       try {
         return await postFile(targets[i], file, exp, onProgress);
       } catch (err) {
+        attempts.push({ host: err?.host, status: err?.status, requestId: err?.requestId, message: err?.message });
         lastError = err;
-        if (!err?.network) throw err;
+        if (!err?.network) {
+          // Penolakan server bukan masalah jaringan: hentikan percobaan.
+          err.attempts = attempts;
+          throw err;
+        }
         onProgress(0);
       }
     }
+    lastError.attempts = attempts;
     throw lastError;
   };
 
@@ -349,7 +367,10 @@ export default function UploadBox() {
           data.files.forEach((item) => newResults.push({ name: item.originalName || file.name || item.name, url: resolveDisplayUrl(item.url) }));
         } catch (err) {
           failed += 1;
-          addNotif(`${file.name}: ${err instanceof Error ? err.message : "Upload gagal"}`, "error");
+          const baseMessage = err instanceof Error ? err.message : "Upload gagal";
+          const multiPath = (err?.attempts?.length ?? 0) > 1 ? " Jalur web dan jalur API sama-sama tidak menjawab." : "";
+          const requestId = err?.requestId || err?.attempts?.map((a) => a.requestId).find(Boolean);
+          addNotif(`${file.name}: ${baseMessage}${multiPath}${requestId ? ` · ID ${String(requestId).slice(0, 8)}` : ""}`, "error");
         }
         setProgress(Math.min(99, Math.round(((index + 1) / files.length) * 100)));
       }
@@ -374,7 +395,9 @@ export default function UploadBox() {
           throw new Error(data.error || "Peladen menolak tautan");
         }
       } catch (err) {
-        addNotif(err instanceof Error ? err.message : "Upload URL gagal", "error");
+        const where = API_REQUEST_BASE || (typeof window !== "undefined" ? window.location.origin : "same-origin");
+        const detail = err instanceof Error ? err.message : "Upload URL gagal";
+        addNotif(`${detail} (jalur ${where})`, "error");
       }
       setProgress(100);
     }

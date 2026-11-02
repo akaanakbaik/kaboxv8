@@ -1,4 +1,5 @@
 import UploadBox from "@/components/UploadBox";
+import Diagnostics from "@/components/Diagnostics";
 
 export default function Home() {
   return (
@@ -12,6 +13,7 @@ export default function Home() {
         </p>
       </div>
       <UploadBox />
+      <Diagnostics />
     </div>
   );
 }
