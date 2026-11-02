@@ -21,6 +21,12 @@ if (process.env.VERCEL) {
       destination: `${API_BASE_URL}/api/:path*`,
     },
     {
+      // Riwayat sesi anonim memakai cookie yang diterbitkan lewat /api, jadi
+      // harus ikut same-origin. /_internal sengaja TIDAK di-proxy.
+      source: "/_session/:path*",
+      destination: `${API_BASE_URL}/_session/:path*`,
+    },
+    {
       source: "/files/:path*",
       destination: `${API_BASE_URL}/files/:path*`,
     },
