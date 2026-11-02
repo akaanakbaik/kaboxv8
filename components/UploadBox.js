@@ -291,35 +291,55 @@ export default function UploadBox() {
     setProgress(0);
     const newResults = [];
     if (activeTab === "local") {
-      try {
-        const formData = new FormData();
-        files.forEach(file => formData.append("files", file));
-        formData.append("exp", expiry);
-        const data = await new Promise((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          xhr.withCredentials = true;
-          xhr.open("POST", `${API_BASE_URL}/api/upload/file`, true);
-          xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
-          };
-          xhr.onload = () => {
-            let payload;
-            try {
-              payload = JSON.parse(xhr.responseText || "{}");
-            } catch {
-              reject(new Error(`Status ${xhr.status}`));
-              return;
-            }
-            if (xhr.status >= 200 && xhr.status < 300 && payload.success) resolve(payload);
-            else reject(new Error(payload.error || `Status ${xhr.status}`));
-          };
-          xhr.onerror = () => reject(new Error("Koneksi terputus"));
-          xhr.send(formData);
-        });
-        data.files.forEach((item, index) => newResults.push({ name: item.originalName || files[index]?.name || item.name, url: item.url }));
+      // Satu request per file. Menggabungkan lima file 30MB menjadi satu body
+      // 150MB membuat Cloudflare menolak request di edge (HTTP 413 tanpa header
+      // CORS), yang di browser terlihat seperti koneksi terputus. Satu file per
+      // request juga membuat satu file gagal tidak membatalkan file lain.
+      let failed = 0;
+      for (let index = 0; index < files.length; index += 1) {
+        const file = files[index];
+        try {
+          const data = await new Promise((resolve, reject) => {
+            const formData = new FormData();
+            formData.append("files", file);
+            formData.append("exp", expiry);
+            const xhr = new XMLHttpRequest();
+            xhr.withCredentials = true;
+            xhr.open("POST", `${API_BASE_URL}/api/upload/file`, true);
+            xhr.timeout = 5 * 60 * 1000;
+            xhr.upload.onprogress = (e) => {
+              if (!e.lengthComputable) return;
+              const filePart = e.loaded / e.total;
+              setProgress(Math.min(99, Math.round(((index + filePart) / files.length) * 100)));
+            };
+            xhr.onload = () => {
+              let payload;
+              try {
+                payload = JSON.parse(xhr.responseText || "{}");
+              } catch {
+                if (xhr.status === 413) {
+                  reject(new Error("Berkas terlalu besar untuk jalur unggah"));
+                  return;
+                }
+                reject(new Error(`Peladen membalas status ${xhr.status}`));
+                return;
+              }
+              if (xhr.status >= 200 && xhr.status < 300 && payload.success) resolve(payload);
+              else reject(new Error(payload.error || `Peladen membalas status ${xhr.status}`));
+            };
+            xhr.onerror = () => reject(new Error("Koneksi terputus. Periksa jaringan lalu coba lagi."));
+            xhr.ontimeout = () => reject(new Error("Waktu unggah habis. Coba lagi dengan jaringan lebih stabil."));
+            xhr.send(formData);
+          });
+          data.files.forEach((item) => newResults.push({ name: item.originalName || file.name || item.name, url: item.url }));
+        } catch (err) {
+          failed += 1;
+          addNotif(`${file.name}: ${err instanceof Error ? err.message : "Upload gagal"}`, "error");
+        }
+        setProgress(Math.min(99, Math.round(((index + 1) / files.length) * 100)));
+      }
+      if (newResults.length > 0) {
         addNotif(`${newResults.length} media berhasil diunggah`);
-      } catch (err) {
-        addNotif(err instanceof Error ? err.message : "Upload gagal", "error");
       }
     } else {
       setProgress(40);
